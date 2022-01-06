@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using MijuTools;
 using SpaceCraft;
@@ -12,6 +13,7 @@ namespace HideHUD_Plugin
     [BepInProcess("Planet Crafter.exe")]
     public class Plugin : BaseUnityPlugin
     {
+        private ConfigEntry<Key> configToggleHotkey;
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
         private static bool initialized = false;
         private bool hudEnabled = true;
@@ -23,6 +25,7 @@ namespace HideHUD_Plugin
         private void Awake()
         {
             // Plugin startup logic
+            configToggleHotkey = Config.Bind("General", "Toggle_HUD_Hotkey", Key.F2, "Pick the key to use to toggle between showing and hiding the HUD");
 
             // Manually patch WindowsHandler as it doesn't seem to work automatically.
             var original = HarmonyLib.AccessTools.Method(typeof(WindowsHandler), "Start");
@@ -47,7 +50,7 @@ namespace HideHUD_Plugin
             {
                 return;
             }
-			if (Keyboard.current.f2Key.wasPressedThisFrame)
+            if (Keyboard.current[configToggleHotkey.Value].wasPressedThisFrame)
 			{
 				hudEnabled = !hudEnabled;
 				if (hudEnabled)
