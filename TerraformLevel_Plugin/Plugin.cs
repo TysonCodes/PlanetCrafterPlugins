@@ -18,16 +18,20 @@ namespace TerraformLevel_Plugin
         private void Awake()
         {
             // Get configuration values
-            configOxygenAmount_ppq = Config.Bind<float>("World_Units", "Oxygen_Amount_ppq", 0.0f, "Set oxygen amount (parts per quadrillion)");
-            configHeatAmount_pK = Config.Bind<float>("World_Units", "Heat_Amount_pK", 0.0f, "Set heat amount (pico Kelvin)");
-            configPressureAmount_nPa = Config.Bind<float>("World_Units", "Pressure_Amount_nPa", 0.0f, "Set pressure amount (nano Pascals)");
-            configBiomassAmount_g = Config.Bind<float>("World_Units", "Biomass_Amount_g", 0.0f, "Set oxygen amount (grams)");
+            configOxygenAmount_ppq = Config.Bind<float>("World_Units", "Oxygen_Amount_ppq", 0.0f, 
+                new ConfigDescription("Set oxygen amount (parts per quadrillion)", new AcceptableValueRange<float>(0.0f, 5000000.0f)));
+            configHeatAmount_pK = Config.Bind<float>("World_Units", "Heat_Amount_pK", 0.0f, 
+                new ConfigDescription("Set heat amount (pico Kelvin)", new AcceptableValueRange<float>(0.0f, 5000000.0f)));
+            configPressureAmount_nPa = Config.Bind<float>("World_Units", "Pressure_Amount_nPa", 0.0f, 
+                new ConfigDescription("Set pressure amount (nano Pascals)", new AcceptableValueRange<float>(0.0f, 5000000.0f)));
+            configBiomassAmount_g = Config.Bind<float>("World_Units", "Biomass_Amount_g", 0.0f, 
+                new ConfigDescription("Set oxygen amount (grams)", new AcceptableValueRange<float>(0.0f, 5000000.0f)));
 
             harmony.PatchAll(typeof(TerraformLevel_Plugin.Plugin));
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
-
+        
         [HarmonyPrefix]
         [HarmonyPatch(typeof(WorldUnit), "Compute")]
         private static bool WorldUnit_ComputePostfix(ref float ___currentTotalValue, ref DataConfig.WorldUnitType ___unitType)
