@@ -1,12 +1,7 @@
-﻿using System.Collections.Generic;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
-using static HarmonyLib.AccessTools;
-using MijuTools;
 using SpaceCraft;
-using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace TerraformLevel_Plugin
 {
@@ -29,12 +24,6 @@ namespace TerraformLevel_Plugin
             configBiomassAmount_g = Config.Bind<float>("World_Units", "Biomass_Amount_g", 0.0f, "Set oxygen amount (grams)");
 
             harmony.PatchAll(typeof(TerraformLevel_Plugin.Plugin));
-            // Manually patch WindowsHandler as it doesn't seem to work automatically.
-            /*
-            var original = HarmonyLib.AccessTools.Method(typeof(WorldUnitsHandler), "ComputeUnitsTick");
-            var postfix = HarmonyLib.AccessTools.Method(typeof(TerraformLevel_Plugin.Plugin), "ComputeUnitsPostfix");
-            var result = harmony.Patch(original, postfix: new HarmonyMethod(postfix));
-            */
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
@@ -56,6 +45,11 @@ namespace TerraformLevel_Plugin
                     break;
                 case DataConfig.WorldUnitType.Biomass:
                     ___currentTotalValue = Plugin.configBiomassAmount_g.Value;
+                    break;
+                case DataConfig.WorldUnitType.Terraformation:
+                    ___currentTotalValue = Plugin.configOxygenAmount_ppq.Value + 
+                        Plugin.configHeatAmount_pK.Value + 
+                        Plugin.configPressureAmount_nPa.Value;
                     break;
             }
             return true;
