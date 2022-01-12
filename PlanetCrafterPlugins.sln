@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HideHUD_Plugin", "HideHUD_P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerraformLevel_Plugin", "TerraformLevel_Plugin\TerraformLevel_Plugin.csproj", "{616DCBEE-21AC-4C80-B241-6804F612938B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedOreExtractor_Plugin", "AdvancedOreExtractor_Plugin\AdvancedOreExtractor_Plugin.csproj", "{858EC943-C660-4D8D-974A-6C03F1534FBD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{616DCBEE-21AC-4C80-B241-6804F612938B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{616DCBEE-21AC-4C80-B241-6804F612938B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{616DCBEE-21AC-4C80-B241-6804F612938B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{858EC943-C660-4D8D-974A-6C03F1534FBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{858EC943-C660-4D8D-974A-6C03F1534FBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{858EC943-C660-4D8D-974A-6C03F1534FBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{858EC943-C660-4D8D-974A-6C03F1534FBD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
