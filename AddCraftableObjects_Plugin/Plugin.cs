@@ -13,7 +13,6 @@ namespace AddCraftableObjects_Plugin
     [BepInProcess("Planet Crafter.exe")]
     public class Plugin : BaseUnityPlugin
     {
-        private static ConfigEntry<int> configSpawnRate;
         private static GameObject advancedBackpackGameObject;
         private static Sprite advancedBackpackIcon;
 
@@ -21,9 +20,6 @@ namespace AddCraftableObjects_Plugin
 
         private void Awake()
         {
-            // Get configuration values
-            configSpawnRate = Config.Bind<int>("Ore_Generator", "spawnRate", 60, "Seconds between creation of each ore item");
-
             // Load the Sprite and GameObject prefab from the asset bundle.
             var assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, "addcraftableobjects_plugin"));
             advancedBackpackGameObject = assetBundle.LoadAsset<GameObject>("AdvancedBackpackPrefab");
@@ -68,8 +64,11 @@ namespace AddCraftableObjects_Plugin
             advancedBackpack.recipeIngredients = new List<GroupDataItem>()
             {
                 GetGroupDataItemById(___groupsData, "Backpack4"),
-                GetGroupDataItemById(___groupsData, "Iron"),
-                GetGroupDataItemById(___groupsData, "Titanium")
+                GetGroupDataItemById(___groupsData, "Alloy"),
+                GetGroupDataItemById(___groupsData, "Alloy"),
+                GetGroupDataItemById(___groupsData, "Alloy"),
+                GetGroupDataItemById(___groupsData, "Alloy"),
+                GetGroupDataItemById(___groupsData, "Alloy"),
             };
             advancedBackpack.unlockingWorldUnit = DataConfig.WorldUnitType.Null;
             advancedBackpack.unlockingValue = 0.0f;
