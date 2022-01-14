@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
@@ -57,7 +56,7 @@ namespace AddCraftableObjects_Plugin
             
             // Inject into list of items for processing by StaticDataHandler.LoadStaticData
             ___groupsData.Add(advancedBackpack);
-            
+
             return true;
         }
 

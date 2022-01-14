@@ -25,12 +25,6 @@
     <Reference Include="GameLibrary">
       <HintPath>$(GameLibrariesFolder)Assembly-CSharp.dll</HintPath>
     </Reference>
-    <Reference Include="UnityInputSystem">
-      <HintPath>$(GameLibrariesFolder)Unity.InputSystem.dll</HintPath>
-    </Reference>
-    <Reference Include="MijuTools">
-      <HintPath>$(GameLibrariesFolder)com.mijugames.miju-tools.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
