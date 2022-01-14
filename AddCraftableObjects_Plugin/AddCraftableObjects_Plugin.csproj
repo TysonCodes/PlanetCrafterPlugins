@@ -25,6 +25,9 @@
     <Reference Include="GameLibrary">
       <HintPath>$(GameLibrariesFolder)Assembly-CSharp.dll</HintPath>
     </Reference>
+    <Reference Include="UnityUI">
+      <HintPath>$(GameLibrariesFolder)UnityEngine.UI.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
