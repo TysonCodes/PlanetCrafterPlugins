@@ -36,14 +36,18 @@ namespace AddCraftableObjects_Plugin
             advancedBackpack.id = "AdvancedBackpack";
             advancedBackpack.associatedGameObject = t4Backpack.associatedGameObject;    // Use existing GameObject (model, particles, etc.) for now
             advancedBackpack.icon = t4Backpack.icon;                                    // Use existing Sprite for icon for now
-            advancedBackpack.recipeIngredients = new List<GroupDataItem>(t4Backpack.recipeIngredients);
+            advancedBackpack.recipeIngredients = new List<GroupDataItem>()
+            {
+                GetGroupDataItemById(___groupsData, "Backpack4"),
+                GetGroupDataItemById(___groupsData, "Iron"),
+                GetGroupDataItemById(___groupsData, "Titanium")
+            };
             advancedBackpack.unlockingWorldUnit = DataConfig.WorldUnitType.Null;
             advancedBackpack.unlockingValue = 0.0f;
             advancedBackpack.terraformStageUnlock = null;
             advancedBackpack.inventorySize = 0;
             advancedBackpack.value = 24;
-            advancedBackpack.craftableInList = new List<DataConfig.CraftableIn>() 
-                {DataConfig.CraftableIn.CraftStationT1, DataConfig.CraftableIn.CraftStationT2, DataConfig.CraftableIn.CraftStationT3};
+            advancedBackpack.craftableInList = new List<DataConfig.CraftableIn>() {DataConfig.CraftableIn.CraftStationT3};
             advancedBackpack.equipableType = DataConfig.EquipableType.BackpackIncrease;
             advancedBackpack.usableType = DataConfig.UsableType.Null;
             advancedBackpack.itemCategory = DataConfig.ItemCategory.Equipment;
