@@ -57,7 +57,7 @@ namespace AddCraftableObjects_Plugin
         private static bool GroupsHandler_SetAllGroups_Prefix(ref List<GroupData> ___groupsData)  
         {
             // Create new GroupDataItem
-            GroupDataItem advancedBackpack = new GroupDataItem();
+            GroupDataItem advancedBackpack = ScriptableObject.CreateInstance(typeof(GroupDataItem)) as GroupDataItem;
             advancedBackpack.id = "AdvancedBackpack";
             advancedBackpack.associatedGameObject = advancedBackpackGameObject;
             advancedBackpack.icon =advancedBackpackIcon;
@@ -70,7 +70,7 @@ namespace AddCraftableObjects_Plugin
                 GetGroupDataItemById(___groupsData, "Alloy"),
                 GetGroupDataItemById(___groupsData, "Alloy"),
             };
-            advancedBackpack.unlockingWorldUnit = DataConfig.WorldUnitType.Null;
+            advancedBackpack.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
             advancedBackpack.unlockingValue = 0.0f;
             advancedBackpack.terraformStageUnlock = null;
             advancedBackpack.inventorySize = 0;
@@ -80,6 +80,9 @@ namespace AddCraftableObjects_Plugin
             advancedBackpack.usableType = DataConfig.UsableType.Null;
             advancedBackpack.itemCategory = DataConfig.ItemCategory.Equipment;
             advancedBackpack.growableGroup = null;
+            advancedBackpack.associatedGroups = new List<GroupData>();
+            advancedBackpack.assignRandomGroupAtSpawn = false;
+            advancedBackpack.replaceByRandomGroupAtSpawn = false;
             advancedBackpack.unitMultiplierOxygen = 0.0f;
             advancedBackpack.unitMultiplierPressure = 0.0f;
             advancedBackpack.unitMultiplierHeat = 0.0f;
