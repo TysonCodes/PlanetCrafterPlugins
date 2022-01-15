@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedOreExtractor_Plugin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AddCraftableObjects_Plugin", "AddCraftableObjects_Plugin\AddCraftableObjects_Plugin.csproj", "{2579891B-59D9-4FF3-8599-B69A343EA56C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrainEditor_Plugin", "TerrainEditor_Plugin\TerrainEditor_Plugin.csproj", "{9D52E13F-382E-4444-BF17-C99AD346FF26}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{2579891B-59D9-4FF3-8599-B69A343EA56C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2579891B-59D9-4FF3-8599-B69A343EA56C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2579891B-59D9-4FF3-8599-B69A343EA56C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D52E13F-382E-4444-BF17-C99AD346FF26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D52E13F-382E-4444-BF17-C99AD346FF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D52E13F-382E-4444-BF17-C99AD346FF26}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D52E13F-382E-4444-BF17-C99AD346FF26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
