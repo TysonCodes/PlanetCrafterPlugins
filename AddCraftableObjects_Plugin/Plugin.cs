@@ -81,8 +81,11 @@ namespace AddCraftableObjects_Plugin
             assetBundleGroupDataItems = null;
             assetBundleGroupDataConstructibles = null;
             assetBundleGameObjects = null;
-            assetBundle.Unload(true);
-            assetBundle = null;
+            if (assetBundle != null)
+            {
+                assetBundle.Unload(true);
+                assetBundle = null;
+            }
             harmony.UnpatchSelf();
         }
     }
