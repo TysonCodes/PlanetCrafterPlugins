@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
@@ -12,19 +13,24 @@ namespace AddCraftableObjects_Plugin
     [BepInProcess("Planet Crafter.exe")]
     public class Plugin : BaseUnityPlugin
     {
-        private static GameObject advancedBackpackGameObject;
-        private static Sprite advancedBackpackIcon;
-        private static GroupDataItem advancedBackpackGroupDataItem;
+        private ConfigEntry<string> configAssetBundleName;
+        private AssetBundle assetBundle;
+        private GameObject[] assetBundleGameObjects;
+        private static GroupDataItem[] assetBundleGroupDataItems;
+        private static GroupDataConstructible[] assetBundleGroupDataConstructibles;
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
         private void Awake()
         {
+            // Get the configurations
+            configAssetBundleName = Config.Bind("General", "Asset_Bundle_Name", "addcraftableobjects_plugin", "The name of the file of the AssetBundle to load.");
+
             // Load the Sprite and GameObject prefab from the asset bundle.
-            var assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, "addcraftableobjects_plugin"));
-            advancedBackpackGameObject = assetBundle.LoadAsset<GameObject>("AdvancedBackpackPrefab");
-            advancedBackpackIcon = assetBundle.LoadAsset<Sprite>("AdvancedBackpackIcon");
-            advancedBackpackGroupDataItem = assetBundle.LoadAsset<GroupDataItem>("AdvancedBackpack");
+            assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, configAssetBundleName.Value));
+            assetBundleGameObjects = assetBundle.LoadAllAssets<GameObject>();
+            assetBundleGroupDataItems = assetBundle.LoadAllAssets<GroupDataItem>();
+            assetBundleGroupDataConstructibles = assetBundle.LoadAllAssets<GroupDataConstructible>();
  
             harmony.PatchAll(typeof(AddCraftableObjects_Plugin.Plugin));
 
@@ -58,13 +64,25 @@ namespace AddCraftableObjects_Plugin
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {
             // Inject into list of items for processing by StaticDataHandler.LoadStaticData
-            ___groupsData.Add(advancedBackpackGroupDataItem);
+            foreach (var item in assetBundleGroupDataItems)
+            {
+                ___groupsData.Add(item);
+            }
+            foreach(var constructible in assetBundleGroupDataConstructibles)
+            {
+                ___groupsData.Add(constructible);
+            }
 
             return true;
         }
 
         private void OnDestroy()
         {
+            assetBundleGroupDataItems = null;
+            assetBundleGroupDataConstructibles = null;
+            assetBundleGameObjects = null;
+            assetBundle.Unload(true);
+            assetBundle = null;
             harmony.UnpatchSelf();
         }
     }
