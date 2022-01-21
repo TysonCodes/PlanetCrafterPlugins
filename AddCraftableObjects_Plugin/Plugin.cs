@@ -15,6 +15,7 @@ namespace AddCraftableObjects_Plugin
     {
         private static GameObject advancedBackpackGameObject;
         private static Sprite advancedBackpackIcon;
+        private static GroupDataItem advancedBackpackGroupDataItem;
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
@@ -24,10 +25,7 @@ namespace AddCraftableObjects_Plugin
             var assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, "addcraftableobjects_plugin"));
             advancedBackpackGameObject = assetBundle.LoadAsset<GameObject>("AdvancedBackpackPrefab");
             advancedBackpackIcon = assetBundle.LoadAsset<Sprite>("AdvancedBackpackIcon");
-
-            // Add some required scripts so we can pick it up and track it.
-            var worldObjectAssociated = advancedBackpackGameObject.AddComponent<WorldObjectAssociated>();
-            var grabbable = advancedBackpackGameObject.AddComponent<ActionGrabable>();
+            advancedBackpackGroupDataItem = assetBundle.LoadAsset<GroupDataItem>("AdvancedBackpack");
  
             harmony.PatchAll(typeof(AddCraftableObjects_Plugin.Plugin));
 
@@ -60,41 +58,8 @@ namespace AddCraftableObjects_Plugin
         [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {
-            // Create new GroupDataItem
-            GroupDataItem advancedBackpack = ScriptableObject.CreateInstance(typeof(GroupDataItem)) as GroupDataItem;
-            advancedBackpack.id = "AdvancedBackpack";
-            advancedBackpack.associatedGameObject = advancedBackpackGameObject;
-            advancedBackpack.icon =advancedBackpackIcon;
-            advancedBackpack.recipeIngredients = new List<GroupDataItem>()
-            {
-                GetGroupDataItemById(___groupsData, "Backpack4"),
-                GetGroupDataItemById(___groupsData, "Alloy"),
-                GetGroupDataItemById(___groupsData, "Alloy"),
-                GetGroupDataItemById(___groupsData, "Alloy"),
-                GetGroupDataItemById(___groupsData, "Alloy"),
-                GetGroupDataItemById(___groupsData, "Alloy"),
-            };
-            advancedBackpack.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
-            advancedBackpack.unlockingValue = 0.0f;
-            advancedBackpack.terraformStageUnlock = null;
-            advancedBackpack.inventorySize = 0;
-            advancedBackpack.value = 28;
-            advancedBackpack.craftableInList = new List<DataConfig.CraftableIn>() {DataConfig.CraftableIn.CraftStationT3};
-            advancedBackpack.equipableType = DataConfig.EquipableType.BackpackIncrease;
-            advancedBackpack.usableType = DataConfig.UsableType.Null;
-            advancedBackpack.itemCategory = DataConfig.ItemCategory.Equipment;
-            advancedBackpack.growableGroup = null;
-            advancedBackpack.associatedGroups = new List<GroupData>();
-            advancedBackpack.assignRandomGroupAtSpawn = false;
-            advancedBackpack.replaceByRandomGroupAtSpawn = false;
-            advancedBackpack.unitMultiplierOxygen = 0.0f;
-            advancedBackpack.unitMultiplierPressure = 0.0f;
-            advancedBackpack.unitMultiplierHeat = 0.0f;
-            advancedBackpack.unitMultiplierEnergy = 0.0f;
-            advancedBackpack.unitMultiplierBiomass = 0.0f;
-            
             // Inject into list of items for processing by StaticDataHandler.LoadStaticData
-            ___groupsData.Add(advancedBackpack);
+            ___groupsData.Add(advancedBackpackGroupDataItem);
 
             return true;
         }
