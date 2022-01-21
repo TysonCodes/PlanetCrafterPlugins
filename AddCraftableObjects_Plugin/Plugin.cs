@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using BepInEx;
-using BepInEx.Configuration;
 using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
@@ -62,11 +61,6 @@ namespace AddCraftableObjects_Plugin
             ___groupsData.Add(advancedBackpackGroupDataItem);
 
             return true;
-        }
-
-        private static GroupDataItem GetGroupDataItemById(List<GroupData> groupsData, string id)
-        {
-            return groupsData.Find((GroupData x) => x.id == id) as GroupDataItem;
         }
 
         private void OnDestroy()
