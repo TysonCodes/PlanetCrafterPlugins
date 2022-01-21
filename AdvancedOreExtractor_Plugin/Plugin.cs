@@ -27,9 +27,13 @@ namespace AdvancedOreExtractor_Plugin
         
         [HarmonyPrefix]
         [HarmonyPatch(typeof(MachineGenerator), "SetGeneratorInventory")]
-        private static bool MachineGenerator_SetGeneratorInventory(ref int ___spawnEveryXSec)
+        private static bool MachineGenerator_SetGeneratorInventory(MachineGenerator __instance, ref int ___spawnEveryXSec)
         {
-            ___spawnEveryXSec = configSpawnRate.Value;
+            WorldObject wObj = __instance.GetComponent<WorldObjectAssociated>().GetWorldObject();
+            if (wObj.GetGroup().id == "OreExtractor1")
+            {
+                ___spawnEveryXSec = configSpawnRate.Value;
+            }
             return true;
         }
 
