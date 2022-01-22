@@ -3,13 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HideHUD_Plugin", "HideHUD_Plugin\HideHUD_Plugin.csproj", "{191481DE-6B75-4C03-AB50-41862EE28834}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AdvancedOreExtractor_Plugin", "AdvancedOreExtractor_Plugin\AdvancedOreExtractor_Plugin.csproj", "{858EC943-C660-4D8D-974A-6C03F1534FBD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AddCraftableObjects_Plugin", "AddCraftableObjects_Plugin\AddCraftableObjects_Plugin.csproj", "{2579891B-59D9-4FF3-8599-B69A343EA56C}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrainEditor_Plugin", "TerrainEditor_Plugin\TerrainEditor_Plugin.csproj", "{9D52E13F-382E-4444-BF17-C99AD346FF26}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,10 +16,6 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{191481DE-6B75-4C03-AB50-41862EE28834}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{191481DE-6B75-4C03-AB50-41862EE28834}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{191481DE-6B75-4C03-AB50-41862EE28834}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{191481DE-6B75-4C03-AB50-41862EE28834}.Release|Any CPU.Build.0 = Release|Any CPU
 		{858EC943-C660-4D8D-974A-6C03F1534FBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{858EC943-C660-4D8D-974A-6C03F1534FBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{858EC943-C660-4D8D-974A-6C03F1534FBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -32,9 +24,5 @@ Global
 		{2579891B-59D9-4FF3-8599-B69A343EA56C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2579891B-59D9-4FF3-8599-B69A343EA56C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2579891B-59D9-4FF3-8599-B69A343EA56C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9D52E13F-382E-4444-BF17-C99AD346FF26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9D52E13F-382E-4444-BF17-C99AD346FF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9D52E13F-382E-4444-BF17-C99AD346FF26}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9D52E13F-382E-4444-BF17-C99AD346FF26}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
