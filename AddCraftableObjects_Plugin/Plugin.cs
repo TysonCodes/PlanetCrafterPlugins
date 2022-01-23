@@ -11,11 +11,21 @@ using UnityEngine.UI;
 namespace AddCraftableObjects_Plugin
 {
     [System.Serializable]
-    public class CraftablesToLoad
+    public class BundlesToLoad
     {
         public List<string> bundleNames;
-        public List<string> itemsToLoad;
-        public List<string> constructiblesToLoad;
+    }
+
+    [System.Serializable]
+    public class ItemsToLoad
+    {
+        public List<string> itemNames;
+    }
+
+    [System.Serializable]
+    public class ConstructiblesToLoad
+    {
+        public List<string> constructibleNames;
     }
 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -23,7 +33,9 @@ namespace AddCraftableObjects_Plugin
     public class Plugin : BaseUnityPlugin
     {
         private ConfigEntry<bool> configLimitLoadedAssets;
-        private ConfigEntry<string> configListOfCraftablesToLoad;
+        private ConfigEntry<string> configAssetBundleNames;
+        private ConfigEntry<string> configListOfItemsToLoad;
+        private ConfigEntry<string> configListOfConstructiblesToLoad;
         private static ConfigEntry<bool> configAddWaterBasedVegetube2;
         private static ManualLogSource bepInExLogger;
         private List<AssetBundle> assetBundles = new List<AssetBundle>();
@@ -39,22 +51,32 @@ namespace AddCraftableObjects_Plugin
             // Get the configurations
             configLimitLoadedAssets = Config.Bind("General", "Limit_Loaded_Assets", false, 
                 "Enables or disables limiting which items and constructibles from asset bundles are added to the game.");
-            configListOfCraftablesToLoad = Config.Bind("General", "List_Of_Craftables_To_Load", 
-                "{\"bundleNames\" : [\"addcraftableobjects_plugin\"], \"itemsToLoad\" : [\"AdvancedBackpack\", \"Coconut\"], " + 
-                "\"constructiblesToLoad\" : [\"PalmTree\"]}", 
-                "List of asset bundles and their associated craftables to add to the game. Specify as JSON object (see default).");
+            configAssetBundleNames = Config.Bind("Asset_Bundles", "List_Of_Bundles_To_Load", "{\"bundleNames\" : [\"addcraftableobjects_plugin\"]}",
+                "List of asset bundles to load specified as JSON array (see default for example).");
+            configListOfItemsToLoad = Config.Bind("Asset_Bundles", "List_Of_Items_To_Load", "{\"itemNames\" : [\"AdvancedBackpack\", \"Coconut\"]}",
+                "List of items to add to the game if Limit_Loaded_Assets is true. Specify as JSON object (see default). Must exist in a loaded AssetBundle.");
+            configListOfConstructiblesToLoad = Config.Bind("Asset_Bundles", "List_Of_Constructibles_To_Load", "{\"constructibleNames\" : [\"PalmTree\"]}",
+                "List of constructibles (buildings via Q menu) to add to the game if Limit_Loaded_Assets is true. Specify as JSON object (see default). " +
+                "Must exist in a loaded AssetBundle.");
             configAddWaterBasedVegetube2 = Config.Bind("General", "Add_Water_Based_Vegetube2", true, 
                 "Whether or not to add a duplicate vegetube T2 which uses water instead of ice for late-game decoration.");
             bepInExLogger = Logger;
 
-            CraftablesToLoad configedCraftables = JsonUtility.FromJson<CraftablesToLoad>(configListOfCraftablesToLoad.Value);
-            Logger.LogInfo($"configString='{configListOfCraftablesToLoad.Value}', configedCraftables='{configedCraftables}'");
+            Logger.LogInfo($"configAssetBundleNames.Value:'{configAssetBundleNames.Value}'");
+            Logger.LogInfo($"configAssetBundleNames.Value:'{configListOfItemsToLoad.Value}'");
+            Logger.LogInfo($"configAssetBundleNames.Value:'{configListOfConstructiblesToLoad.Value}'");
 
-            foreach (var assetBundleName in configedCraftables.bundleNames)
+            BundlesToLoad bundlesToLoad = JsonUtility.FromJson<BundlesToLoad>(configAssetBundleNames.Value);
+            ItemsToLoad itemsToLoad = JsonUtility.FromJson<ItemsToLoad>(configListOfItemsToLoad.Value);
+            ConstructiblesToLoad constructiblesToLoad = JsonUtility.FromJson<ConstructiblesToLoad>(configListOfConstructiblesToLoad.Value);
+
+            Logger.LogInfo($"bundlesToLoad={bundlesToLoad.ToString()}, itemsToLoad={itemsToLoad.ToString()}, constructiblesToLoad={constructiblesToLoad.ToString()}");
+
+            foreach (var assetBundleName in bundlesToLoad.bundleNames)
             {
                 var assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, assetBundleName));
                 assetBundles.Add(assetBundle);
-                LoadCraftablesFromAssetBundleBasedOnConfig(assetBundle, configedCraftables);
+                LoadCraftablesFromAssetBundleBasedOnConfig(assetBundle, itemsToLoad.itemNames, constructiblesToLoad.constructibleNames);
             }
  
             harmony.PatchAll(typeof(AddCraftableObjects_Plugin.Plugin));
@@ -62,7 +84,7 @@ namespace AddCraftableObjects_Plugin
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        private void LoadCraftablesFromAssetBundleBasedOnConfig(AssetBundle bundle,CraftablesToLoad assetBundleConfig)
+        private void LoadCraftablesFromAssetBundleBasedOnConfig(AssetBundle bundle, List<string> itemNames, List<string> constructibleNames)
         {
             // Load the Sprite and GameObject prefab from the asset bundle.
             assetBundleGameObjects.AddRange(bundle.LoadAllAssets<GameObject>());
@@ -71,7 +93,7 @@ namespace AddCraftableObjects_Plugin
 
             foreach (var item in loadedItems)
             {
-                if (!configLimitLoadedAssets.Value || assetBundleConfig.itemsToLoad.Contains(item.id))
+                if (!configLimitLoadedAssets.Value || itemNames.Contains(item.id))
                 {
                     assetBundleGroupDataItems.Add(item);
                 }
@@ -79,7 +101,7 @@ namespace AddCraftableObjects_Plugin
  
             foreach (var constructible in loadedConstructibles)
             {
-                if (!configLimitLoadedAssets.Value || assetBundleConfig.constructiblesToLoad.Contains(constructible.id))
+                if (!configLimitLoadedAssets.Value || constructibleNames.Contains(constructible.id))
                 {
                     assetBundleGroupDataConstructibles.Add(constructible);
                 }
