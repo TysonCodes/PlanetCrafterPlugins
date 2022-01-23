@@ -2,6 +2,7 @@
 using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
@@ -14,10 +15,12 @@ namespace AddCraftableObjects_Plugin
     public class Plugin : BaseUnityPlugin
     {
         private ConfigEntry<string> configAssetBundleName;
+        private static ManualLogSource bepInExLogger;
         private AssetBundle assetBundle;
         private GameObject[] assetBundleGameObjects;
         private static GroupDataItem[] assetBundleGroupDataItems;
         private static GroupDataConstructible[] assetBundleGroupDataConstructibles;
+        private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
@@ -25,6 +28,7 @@ namespace AddCraftableObjects_Plugin
         {
             // Get the configurations
             configAssetBundleName = Config.Bind("General", "Asset_Bundle_Name", "addcraftableobjects_plugin", "The name of the file of the AssetBundle to load.");
+            bepInExLogger = Logger;
 
             // Load the Sprite and GameObject prefab from the asset bundle.
             assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, configAssetBundleName.Value));
@@ -63,17 +67,36 @@ namespace AddCraftableObjects_Plugin
         [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {
+            // Index all of the existing group data
+            foreach (var groupData in ___groupsData)
+            {
+                groupDataById[groupData.id] = groupData;
+            }
+            bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
+
             // Inject into list of items for processing by StaticDataHandler.LoadStaticData
             foreach (var item in assetBundleGroupDataItems)
             {
-                ___groupsData.Add(item);
+                AddGroupDataToList(ref ___groupsData, item);
             }
             foreach(var constructible in assetBundleGroupDataConstructibles)
             {
-                ___groupsData.Add(constructible);
+                AddGroupDataToList(ref ___groupsData, constructible);
             }
 
             return true;
+        }
+
+        private static void AddGroupDataToList(ref List<GroupData> groupsData, GroupData toAdd)
+        {
+                bepInExLogger.LogInfo($"Adding {toAdd.id} to group data.");
+                bool alreadyExists = groupDataById.ContainsKey(toAdd.id);
+                groupsData.Add(toAdd);
+                groupDataById[toAdd.id] = toAdd;
+                if (alreadyExists)
+                {
+                    bepInExLogger.LogWarning($"Adding duplicate group data with id '{toAdd.id}'");
+                }            
         }
 
         private void OnDestroy()
