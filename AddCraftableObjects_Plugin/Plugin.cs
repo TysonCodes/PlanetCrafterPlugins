@@ -10,17 +10,26 @@ using UnityEngine.UI;
 
 namespace AddCraftableObjects_Plugin
 {
+    [System.Serializable]
+    public class CraftablesToLoad
+    {
+        public List<string> itemsToLoad;
+        public List<string> constructiblesToLoad;
+    }
+
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
     public class Plugin : BaseUnityPlugin
     {
         private ConfigEntry<string> configAssetBundleName;
-        private static ConfigEntry<bool> addWaterBasedVegetube2;
+        private ConfigEntry<bool> configLimitLoadedAssets;
+        private ConfigEntry<string> configListOfCraftablesToLoad;
+        private static ConfigEntry<bool> configAddWaterBasedVegetube2;
         private static ManualLogSource bepInExLogger;
         private AssetBundle assetBundle;
         private GameObject[] assetBundleGameObjects;
-        private static GroupDataItem[] assetBundleGroupDataItems;
-        private static GroupDataConstructible[] assetBundleGroupDataConstructibles;
+        private static List<GroupDataItem> assetBundleGroupDataItems = new List<GroupDataItem>();
+        private static List<GroupDataConstructible> assetBundleGroupDataConstructibles = new List<GroupDataConstructible>();
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
@@ -29,15 +38,38 @@ namespace AddCraftableObjects_Plugin
         {
             // Get the configurations
             configAssetBundleName = Config.Bind("General", "Asset_Bundle_Name", "addcraftableobjects_plugin", "The name of the file of the AssetBundle to load.");
-            addWaterBasedVegetube2 = Config.Bind("General", "Add_Water_Based_Vegetube2", true, 
+            configLimitLoadedAssets = Config.Bind("General", "Limit_Loaded_Assets", false, 
+                "Enables or disables the lists below to pick which items and constructibles are added to the game.");
+            configListOfCraftablesToLoad = Config.Bind("General", "List_Of_Craftables_To_Load", "{\"itemsToLoad\" : [\"AdvancedBackpack\", \"Coconut\"], " + 
+                "\"constructiblesToLoad\" : [\"PalmTree\"]}", 
+                "List of craftables to add to the game. Specify as JSON object (see default). They must be in a loaded AssetBundle.");
+            configAddWaterBasedVegetube2 = Config.Bind("General", "Add_Water_Based_Vegetube2", true, 
                 "Whether or not to add a duplicate vegetube T2 which uses water instead of ice for late-game decoration.");
             bepInExLogger = Logger;
 
             // Load the Sprite and GameObject prefab from the asset bundle.
             assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, configAssetBundleName.Value));
             assetBundleGameObjects = assetBundle.LoadAllAssets<GameObject>();
-            assetBundleGroupDataItems = assetBundle.LoadAllAssets<GroupDataItem>();
-            assetBundleGroupDataConstructibles = assetBundle.LoadAllAssets<GroupDataConstructible>();
+            var loadedItems = assetBundle.LoadAllAssets<GroupDataItem>();
+            var loadedConstructibles = assetBundle.LoadAllAssets<GroupDataConstructible>();
+
+            CraftablesToLoad configedCraftables = JsonUtility.FromJson<CraftablesToLoad>(configListOfCraftablesToLoad.Value);
+
+            foreach (var item in loadedItems)
+            {
+                if (!configLimitLoadedAssets.Value || configedCraftables.itemsToLoad.Contains(item.id))
+                {
+                    assetBundleGroupDataItems.Add(item);
+                }
+            }
+ 
+            foreach (var constructible in loadedConstructibles)
+            {
+                if (!configLimitLoadedAssets.Value || configedCraftables.constructiblesToLoad.Contains(constructible.id))
+                {
+                    assetBundleGroupDataConstructibles.Add(constructible);
+                }
+            }
  
             harmony.PatchAll(typeof(AddCraftableObjects_Plugin.Plugin));
 
@@ -87,7 +119,7 @@ namespace AddCraftableObjects_Plugin
                 AddGroupDataToList(ref ___groupsData, constructible);
             }
 
-            if (addWaterBasedVegetube2.Value)
+            if (configAddWaterBasedVegetube2.Value)
             {
                 GroupDataConstructible originalVegetube2 = groupDataById["Vegetube2"] as GroupDataConstructible;
                 GroupDataConstructible waterVegetube2 = Instantiate<GroupDataConstructible>(originalVegetube2);
