@@ -15,6 +15,7 @@ namespace AddCraftableObjects_Plugin
     public class Plugin : BaseUnityPlugin
     {
         private ConfigEntry<string> configAssetBundleName;
+        private static ConfigEntry<bool> addWaterBasedVegetube2;
         private static ManualLogSource bepInExLogger;
         private AssetBundle assetBundle;
         private GameObject[] assetBundleGameObjects;
@@ -28,6 +29,8 @@ namespace AddCraftableObjects_Plugin
         {
             // Get the configurations
             configAssetBundleName = Config.Bind("General", "Asset_Bundle_Name", "addcraftableobjects_plugin", "The name of the file of the AssetBundle to load.");
+            addWaterBasedVegetube2 = Config.Bind("General", "Add_Water_Based_Vegetube2", true, 
+                "Whether or not to add a duplicate vegetube T2 which uses water instead of ice for late-game decoration.");
             bepInExLogger = Logger;
 
             // Load the Sprite and GameObject prefab from the asset bundle.
@@ -82,6 +85,29 @@ namespace AddCraftableObjects_Plugin
             foreach(var constructible in assetBundleGroupDataConstructibles)
             {
                 AddGroupDataToList(ref ___groupsData, constructible);
+            }
+
+            if (addWaterBasedVegetube2.Value)
+            {
+                GroupDataConstructible originalVegetube2 = groupDataById["Vegetube2"] as GroupDataConstructible;
+                GroupDataConstructible waterVegetube2 = Instantiate<GroupDataConstructible>(originalVegetube2);
+                waterVegetube2.name = originalVegetube2.name;
+                waterVegetube2.id = "Vegetube2-Water";
+                GroupDataItem waterBottle = groupDataById["WaterBottle1"] as GroupDataItem;
+                List<GroupDataItem> newRecipe = new List<GroupDataItem>();
+                foreach(var ingredient in waterVegetube2.recipeIngredients)
+                {
+                    if (ingredient.id == "ice")
+                    {
+                        newRecipe.Add(waterBottle);
+                    }
+                    else
+                    {
+                        newRecipe.Add(ingredient);
+                    }
+                }
+                waterVegetube2.recipeIngredients = newRecipe;
+                AddGroupDataToList(ref ___groupsData, waterVegetube2);
             }
 
             return true;
