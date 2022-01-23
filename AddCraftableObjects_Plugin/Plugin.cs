@@ -13,6 +13,7 @@ namespace AddCraftableObjects_Plugin
     [System.Serializable]
     public class CraftablesToLoad
     {
+        public List<string> bundleNames;
         public List<string> itemsToLoad;
         public List<string> constructiblesToLoad;
     }
@@ -21,13 +22,12 @@ namespace AddCraftableObjects_Plugin
     [BepInProcess("Planet Crafter.exe")]
     public class Plugin : BaseUnityPlugin
     {
-        private ConfigEntry<string> configAssetBundleName;
         private ConfigEntry<bool> configLimitLoadedAssets;
         private ConfigEntry<string> configListOfCraftablesToLoad;
         private static ConfigEntry<bool> configAddWaterBasedVegetube2;
         private static ManualLogSource bepInExLogger;
-        private AssetBundle assetBundle;
-        private GameObject[] assetBundleGameObjects;
+        private List<AssetBundle> assetBundles = new List<AssetBundle>();
+        private List<GameObject> assetBundleGameObjects = new List<GameObject>();
         private static List<GroupDataItem> assetBundleGroupDataItems = new List<GroupDataItem>();
         private static List<GroupDataConstructible> assetBundleGroupDataConstructibles = new List<GroupDataConstructible>();
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
@@ -37,27 +37,41 @@ namespace AddCraftableObjects_Plugin
         private void Awake()
         {
             // Get the configurations
-            configAssetBundleName = Config.Bind("General", "Asset_Bundle_Name", "addcraftableobjects_plugin", "The name of the file of the AssetBundle to load.");
             configLimitLoadedAssets = Config.Bind("General", "Limit_Loaded_Assets", false, 
-                "Enables or disables the lists below to pick which items and constructibles are added to the game.");
-            configListOfCraftablesToLoad = Config.Bind("General", "List_Of_Craftables_To_Load", "{\"itemsToLoad\" : [\"AdvancedBackpack\", \"Coconut\"], " + 
+                "Enables or disables limiting which items and constructibles from asset bundles are added to the game.");
+            configListOfCraftablesToLoad = Config.Bind("General", "List_Of_Craftables_To_Load", 
+                "{\"bundleNames\" : [\"addcraftableobjects_plugin\"], \"itemsToLoad\" : [\"AdvancedBackpack\", \"Coconut\"], " + 
                 "\"constructiblesToLoad\" : [\"PalmTree\"]}", 
-                "List of craftables to add to the game. Specify as JSON object (see default). They must be in a loaded AssetBundle.");
+                "List of asset bundles and their associated craftables to add to the game. Specify as JSON object (see default).");
             configAddWaterBasedVegetube2 = Config.Bind("General", "Add_Water_Based_Vegetube2", true, 
                 "Whether or not to add a duplicate vegetube T2 which uses water instead of ice for late-game decoration.");
             bepInExLogger = Logger;
 
-            // Load the Sprite and GameObject prefab from the asset bundle.
-            assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, configAssetBundleName.Value));
-            assetBundleGameObjects = assetBundle.LoadAllAssets<GameObject>();
-            var loadedItems = assetBundle.LoadAllAssets<GroupDataItem>();
-            var loadedConstructibles = assetBundle.LoadAllAssets<GroupDataConstructible>();
-
             CraftablesToLoad configedCraftables = JsonUtility.FromJson<CraftablesToLoad>(configListOfCraftablesToLoad.Value);
+            Logger.LogInfo($"configString='{configListOfCraftablesToLoad.Value}', configedCraftables='{configedCraftables}'");
+
+            foreach (var assetBundleName in configedCraftables.bundleNames)
+            {
+                var assetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, assetBundleName));
+                assetBundles.Add(assetBundle);
+                LoadCraftablesFromAssetBundleBasedOnConfig(assetBundle, configedCraftables);
+            }
+ 
+            harmony.PatchAll(typeof(AddCraftableObjects_Plugin.Plugin));
+
+            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        private void LoadCraftablesFromAssetBundleBasedOnConfig(AssetBundle bundle,CraftablesToLoad assetBundleConfig)
+        {
+            // Load the Sprite and GameObject prefab from the asset bundle.
+            assetBundleGameObjects.AddRange(bundle.LoadAllAssets<GameObject>());
+            var loadedItems = bundle.LoadAllAssets<GroupDataItem>();
+            var loadedConstructibles = bundle.LoadAllAssets<GroupDataConstructible>();
 
             foreach (var item in loadedItems)
             {
-                if (!configLimitLoadedAssets.Value || configedCraftables.itemsToLoad.Contains(item.id))
+                if (!configLimitLoadedAssets.Value || assetBundleConfig.itemsToLoad.Contains(item.id))
                 {
                     assetBundleGroupDataItems.Add(item);
                 }
@@ -65,15 +79,11 @@ namespace AddCraftableObjects_Plugin
  
             foreach (var constructible in loadedConstructibles)
             {
-                if (!configLimitLoadedAssets.Value || configedCraftables.constructiblesToLoad.Contains(constructible.id))
+                if (!configLimitLoadedAssets.Value || assetBundleConfig.constructiblesToLoad.Contains(constructible.id))
                 {
                     assetBundleGroupDataConstructibles.Add(constructible);
                 }
             }
- 
-            harmony.PatchAll(typeof(AddCraftableObjects_Plugin.Plugin));
-
-            Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
         [HarmonyPrefix]
@@ -162,11 +172,14 @@ namespace AddCraftableObjects_Plugin
             assetBundleGroupDataItems = null;
             assetBundleGroupDataConstructibles = null;
             assetBundleGameObjects = null;
-            if (assetBundle != null)
+            foreach (var assetBundle in assetBundles)
             {
-                assetBundle.Unload(true);
-                assetBundle = null;
+                if (assetBundle != null)
+                {
+                    assetBundle.Unload(true);
+                }
             }
+            assetBundles = null;
             harmony.UnpatchSelf();
         }
     }
