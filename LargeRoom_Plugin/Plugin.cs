@@ -6,6 +6,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace LargeRoom_Plugin
 {
@@ -16,6 +17,7 @@ namespace LargeRoom_Plugin
         private static ManualLogSource bepInExLogger;
         private static GroupDataConstructible largeRoomGDC;
         private static Sprite largeRoomIcon;
+        private static VolumeProfile podSharedVolumeProfile;
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>();
         private const string LARGE_ROOM_ICON_FILE_NAME = "LargeRoom_Plugin.LargeRoomIcon-Small.png";
 
@@ -53,6 +55,7 @@ namespace LargeRoom_Plugin
             // Copy the Pod GroupDataConstructible and modify it
             GroupData BiolabGD = groupDataById["Biolab"];
             largeRoomGDC = Instantiate<GroupDataConstructible>(groupDataById["pod"] as GroupDataConstructible);
+            GameObject podGO = largeRoomGDC.associatedGameObject;
             largeRoomGDC.associatedGameObject = BiolabGD.associatedGameObject;
             largeRoomGDC.icon = largeRoomIcon;
             largeRoomGDC.name = "LargeRoom";
@@ -63,6 +66,10 @@ namespace LargeRoom_Plugin
             largeRoomGDC.recipeIngredients = new List<GroupDataItem>(){
                     iron, iron, iron, iron, magnesium, magnesium, aluminum, aluminum            
                 };
+
+            // Save the pod post processing profile
+            Volume podVolume = podGO.GetComponentInChildren<Volume>();
+            podSharedVolumeProfile = podVolume.sharedProfile;
 
             // Add to the list of groups            
             AddGroupDataToList(ref ___groupsData, largeRoomGDC);
@@ -98,6 +105,9 @@ namespace LargeRoom_Plugin
                     }
                 }
                 Destroy(lightToAdd);
+
+                // Set the VolumeProfile to match Pod
+                __result.GetComponentInChildren<Volume>().sharedProfile = podSharedVolumeProfile;
             }
         }
 
