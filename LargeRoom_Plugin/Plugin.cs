@@ -76,7 +76,28 @@ namespace LargeRoom_Plugin
         {
             if (_worldObject.GetGroup() != null && _worldObject.GetGroup().id == "LargeRoom")
             {
+                // Hide content
                 __result.transform.Find("Container/Content").gameObject.SetActive(false);
+
+                // Add point lights to all the pod centers.
+                GameObject lightToAdd = new GameObject("Point Light");
+                lightToAdd.transform.localPosition = new Vector3(0.04f, 3.1f, 2.86f);
+                Light lightComponent = lightToAdd.AddComponent<Light>();
+                lightComponent.range = 8.0f;
+                lightComponent.intensity = 5.0f;
+                lightComponent.shadows = LightShadows.Soft;
+                lightComponent.shadowBias = 0.02f;
+                lightComponent.shadowNormalBias = 0.1f;
+                lightComponent.shadowNearPlane = 0.1f;
+                Transform podsParent = __result.transform.Find("Container/4BlocRoom");
+                for (int i = 0; i < podsParent.childCount; i++)
+                {
+                    if (podsParent.GetChild(i).gameObject.name.Contains("Pod"))
+                    {
+                        Instantiate<GameObject>(lightToAdd, podsParent.GetChild(i));
+                    }
+                }
+                Destroy(lightToAdd);
             }
         }
 
