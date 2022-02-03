@@ -28,6 +28,9 @@
     <Reference Include="UnityURP-Core">
       <HintPath>$(GameLibrariesFolder)Unity.RenderPipelines.Core.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="MijuTools">
+      <HintPath>$(GameLibrariesFolder)com.mijugames.miju-tools.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">

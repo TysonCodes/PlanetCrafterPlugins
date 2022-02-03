@@ -4,6 +4,7 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using MijuTools;
 using SpaceCraft;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -15,7 +16,6 @@ namespace LargeRoom_Plugin
     public class Plugin : BaseUnityPlugin
     {
         private static ManualLogSource bepInExLogger;
-        private static GroupDataConstructible largeRoomGDC;
         private static Sprite largeRoomIcon;
         private static VolumeProfile podSharedVolumeProfile;
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>();
@@ -54,7 +54,7 @@ namespace LargeRoom_Plugin
 
             // Copy the Pod GroupDataConstructible and modify it
             GroupData BiolabGD = groupDataById["Biolab"];
-            largeRoomGDC = Instantiate<GroupDataConstructible>(groupDataById["pod"] as GroupDataConstructible);
+            GroupDataConstructible largeRoomGDC = Instantiate<GroupDataConstructible>(groupDataById["pod"] as GroupDataConstructible);
             GameObject podGO = largeRoomGDC.associatedGameObject;
             largeRoomGDC.associatedGameObject = BiolabGD.associatedGameObject;
             largeRoomGDC.icon = largeRoomIcon;
@@ -67,12 +67,28 @@ namespace LargeRoom_Plugin
                     iron, iron, iron, iron, magnesium, magnesium, aluminum, aluminum            
                 };
 
+            // Add to the list of groups            
+            AddGroupDataToList(ref ___groupsData, largeRoomGDC);
+
+            // Copy the window wall to add the biolab wall
+            var panelsResources = Managers.GetManager<PanelsResources>();
+            if (panelsResources != null)
+            {
+                GroupDataConstructible biolabWallGDC = Instantiate<GroupDataConstructible>(groupDataById["window"] as GroupDataConstructible);
+                biolabWallGDC.associatedGameObject =panelsResources.GetPanelGameObject(DataConfig.BuildPanelSubType.WallLab);
+                biolabWallGDC.name = "BiolabWall";
+                biolabWallGDC.id = "BiolabWall";
+
+                // Add to the list of groups
+                AddGroupDataToList(ref ___groupsData, biolabWallGDC);
+
+                // Save to PanelsResources
+                panelsResources.panelsGroupItems[9] = groupDataById[biolabWallGDC.id] as GroupDataConstructible;
+            }
+
             // Save the pod post processing profile
             Volume podVolume = podGO.GetComponentInChildren<Volume>();
             podSharedVolumeProfile = podVolume.sharedProfile;
-
-            // Add to the list of groups            
-            AddGroupDataToList(ref ___groupsData, largeRoomGDC);
 
             return true;
         }
