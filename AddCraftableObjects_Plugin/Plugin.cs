@@ -109,28 +109,6 @@ namespace AddCraftableObjects_Plugin
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(InventoryDisplayer), "TrueRefreshContent")]
-        private static bool InventoryDisplayer_TrueRefreshContent_Prefix(Inventory ___inventory, ref GridLayoutGroup ___grid)
-        {
-            RectTransform parentTransform = ___grid.transform.parent as RectTransform;
-            if (___inventory.GetSize() > 32)
-            {
-                // If the inventory would run off the screen because it is too large then increase width to allow 5 items
-                // across and mess with the alignment so the sorting button doesn't overlap.
-                // There are nicer ways to do this but more work to get auto-sizing working or add scrolling
-                ___grid.childAlignment = TextAnchor.MiddleRight;
-                parentTransform.sizeDelta = new Vector2(620, parentTransform.sizeDelta.y);
-            }
-            else
-            {
-                // In case we reduce inventory size go back to the previous settings - ugly hard coding...
-                ___grid.childAlignment = TextAnchor.MiddleCenter;
-                parentTransform.sizeDelta = new Vector2(475, parentTransform.sizeDelta.y);
-            }
-            return true;
-        }
-        
-        [HarmonyPrefix]
         [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {

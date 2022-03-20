@@ -24,11 +24,8 @@ namespace SeedSpreaderSeeds_Plugin
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {
             // Hack the seed spreader so that it doesn't remove colliders from grown seeds.
-            if (GetGameObjectForGroup(___groupsData, "SeedSpreader1")
-                .TryGetComponent<MachineOutsideGrower>(out MachineOutsideGrower grower))
-            {
-                grower.canRecolt = true;
-            }
+            EnablePickingUpGrownItems(ref ___groupsData, "SeedSpreader1");
+            EnablePickingUpGrownItems(ref ___groupsData, "SeedSpreader2");
 
             Dictionary<string, string> seedGrowablesToReplaceAndTheirSeeds = new Dictionary<string, string>()
             {
@@ -37,16 +34,26 @@ namespace SeedSpreaderSeeds_Plugin
                 {"Seed2Growable", "Seed2"},
                 {"Seed3Growable", "Seed3"},
                 {"Seed4Growable", "Seed4"},
+                {"Seed5Growable", "Seed5"},
+                {"Seed6Growable", "Seed6"},
                 {"SeedGoldGrowable", "SeedGold"}
             };
 
             foreach (var growable in seedGrowablesToReplaceAndTheirSeeds.Keys)
             {
                 MakeGrabbingGrowableReturnSeed(___groupsData, growable, seedGrowablesToReplaceAndTheirSeeds[growable]);
-
             }
 
             return true;
+        }
+
+        private static void EnablePickingUpGrownItems(ref List<GroupData> groupsData, string machineName)
+        {
+            if (GetGameObjectForGroup(groupsData, machineName)
+                .TryGetComponent<MachineOutsideGrower>(out MachineOutsideGrower grower))
+            {
+                grower.canRecolt = true;
+            }
         }
 
         private static void MakeGrabbingGrowableReturnSeed(List<GroupData> groupData, string growableName, string seedName)
