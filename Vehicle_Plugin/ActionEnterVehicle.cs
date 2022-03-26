@@ -1,3 +1,4 @@
+using HarmonyLib;
 using MijuTools;
 using UnityEngine;
 
@@ -11,6 +12,7 @@ namespace SpaceCraft
         private static PlayerMainController activePlayerController;
         private static PlayerMultitool playerMultitool;
         private static PlayerLookable playerLookable;
+        private static PlayerCameraShake playerCameraShake;
 
         // Components
         private GameObject rootObject;
@@ -20,6 +22,7 @@ namespace SpaceCraft
         private Transform vehicleLocationTransform;
         private Transform playerHeadLocationTransform;
         private Transform playerExitLocationTransform;
+        private WorldObject worldObject;
 
         // Other game objects
         private GameObject playerArmor;
@@ -36,11 +39,12 @@ namespace SpaceCraft
 
         private new void Start()
 		{
-            if (activePlayerController == null || playerMultitool == null || playerLookable == null)
+            if (activePlayerController == null || playerMultitool == null || playerLookable == null || playerCameraShake == null)
             {
                 activePlayerController = Managers.GetManager<PlayersManager>().GetActivePlayerController();
                 playerMultitool = activePlayerController.GetMultitool();
                 playerLookable = activePlayerController.GetPlayerLookable();
+                playerCameraShake = activePlayerController.GetPlayerCameraShake();
             }
 
             // Get various components on the vehicle.
@@ -53,12 +57,21 @@ namespace SpaceCraft
             vehicleLocationTransform = rootObject.transform;
             playerHeadLocationTransform = rootObject.transform.Find("PlayerHeadLocation");
             playerExitLocationTransform = rootObject.transform.Find("PlayerExitLocation");
+            worldObject = rootObject.GetComponent<WorldObjectAssociated>().GetWorldObject();
 
             // Get other components
             GameObject playerGO = GameObject.Find("Player");
             playerArmor = playerGO.GetComponentInChildren<PlayerTEMPFIXANIM>().playerArmor;            
             playerFootsteps = playerGO.transform.Find("Audio/Footsteps").GetComponent<AudioSource>();
 		}
+
+        private void Update()
+        {
+            if (inVehicle)
+            {
+                worldObject.SetPositionAndRotation(vehicleLocationTransform.position, vehicleLocationTransform.rotation);
+            }
+        }
 
 		public override void OnAction()
 		{
@@ -88,6 +101,9 @@ namespace SpaceCraft
             float newPlayerCameraHeight = playerHeadLocationTransform.localPosition.y;
             playerLookable.m_Camera.localPosition = new Vector3(curCameraLocalPosition.x, newPlayerCameraHeight, curCameraLocalPosition.z);
 
+            // Update the local camera position used by the camera shaker
+            UpdateCameraShakerOriginalLocalCameraPosition(playerLookable.m_Camera.localPosition);
+
             // Parent vehicle to player game object
             var curLocalYAngle = rootObject.transform.localEulerAngles.y;
             rootObject.transform.localEulerAngles = new Vector3(0.0f, curLocalYAngle, 0.0f);
@@ -116,6 +132,11 @@ namespace SpaceCraft
             // Enable exit collider
             exitVehicleCollider.enabled = true;
 		}
+
+        private void UpdateCameraShakerOriginalLocalCameraPosition(Vector3 newPosition)
+        {
+            HarmonyLib.AccessTools.FieldRefAccess<PlayerCameraShake, Vector3>(playerCameraShake, "originalCamPosition") = newPosition;
+        }
 
         public void ExitVehicle()
         {
@@ -150,6 +171,7 @@ namespace SpaceCraft
                 // Reset the height of the player
                 Vector3 curCameraLocalPosition = playerLookable.m_Camera.localPosition; 
                 playerLookable.m_Camera.localPosition = new Vector3(curCameraLocalPosition.x, previousPlayerCameraHeight, curCameraLocalPosition.z);
+                UpdateCameraShakerOriginalLocalCameraPosition(playerLookable.m_Camera.localPosition);
 
                 // Move player to exit location.
                 activePlayerController.SetPlayerPlacement(playerExitLocationTransform.position, activePlayerController.transform.rotation);

@@ -5,7 +5,7 @@
     <AssemblyName>PlanetCrafterPlugins.Vehicle_Plugin</AssemblyName>
     <Product>Vehicle</Product>
     <Description>A plugin to test adding a vehicle with breathable atmosphere and inventory</Description>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <PlanetCrafterFolder>C:\Program Files (x86)\Steam\steamapps\common\The Planet Crafter</PlanetCrafterFolder>
