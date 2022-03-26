@@ -36,6 +36,7 @@ namespace SpaceCraft
         private float previousPlayerColliderHeight = 0.0f;
         private float previousPlayerColliderRadius = 0.0f;
         private float previousFootstepsVolume = 0.0f;
+        private float previousRunSpeed = 0.0f;
 
         private new void Start()
 		{
@@ -129,6 +130,10 @@ namespace SpaceCraft
             // Disable player jumping
             activePlayerController.GetPlayerMovable().EnableJump = false;
 
+            // Enhance run speed
+            previousRunSpeed = activePlayerController.GetPlayerMovable().RunSpeed;
+            activePlayerController.GetPlayerMovable().RunSpeed *= 2.0f;
+
             // Enable exit collider
             exitVehicleCollider.enabled = true;
 		}
@@ -146,6 +151,9 @@ namespace SpaceCraft
 
                 // Disable exit collider
                 exitVehicleCollider.enabled = false;
+
+                // Restore run speed
+                activePlayerController.GetPlayerMovable().RunSpeed = previousRunSpeed;    
 
                 // Enable player jumping
                 activePlayerController.GetPlayerMovable().EnableJump = true;
