@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <AssemblyName>PlanetCrafterPlugins.Vehicle_Plugin</AssemblyName>
-    <Product>Vehicle</Product>
-    <Description>A plugin to test adding a vehicle with breathable atmosphere and inventory</Description>
-    <Version>1.1.1</Version>
+    <AssemblyName>PlanetCrafterPlugins.OreExtractorTweaks_Plugin</AssemblyName>
+    <Product>OreExtractorTweaks</Product>
+    <Description>A plugin to modify the Ore Extractor</Description>
+    <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <PlanetCrafterFolder>C:\Program Files (x86)\Steam\steamapps\common\The Planet Crafter</PlanetCrafterFolder>
@@ -27,9 +27,6 @@
     </Reference>
     <Reference Include="UnityUI">
       <HintPath>$(GameLibrariesFolder)UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="MijuTools">
-      <HintPath>$(GameLibrariesFolder)com.mijugames.miju-tools.dll</HintPath>
     </Reference>
   </ItemGroup>
 
