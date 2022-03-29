@@ -167,6 +167,28 @@ namespace AddCraftableObjects_Plugin
                 }            
         }
 
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(SavedDataHandler), "LoadSavedData")]
+        private static void SavedDataHandler_LoadSavedData_Postfix()
+        {
+            Inventory playerInventory = InventoriesHandler.GetInventoryById(1);
+            if (playerInventory.GetSize() < 40 && AdvancedBackpackIsEquipped())
+            {
+                playerInventory.SetSize(40);
+            }
+        }
+
+        private static bool AdvancedBackpackIsEquipped()
+        {
+            Inventory playerBackpack = InventoriesHandler.GetInventoryById(2);
+            foreach (WorldObject obj in playerBackpack.GetInsideWorldObjects())
+            {
+                if (obj.GetGroup().id == "AdvancedBackpack")
+                {return true;}
+            }
+            return false;
+        }
+
         private void OnDestroy()
         {
             assetBundleGroupDataItems = null;

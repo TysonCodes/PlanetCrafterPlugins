@@ -1,12 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.Logging;
 using HarmonyLib;
 using SpaceCraft;
-using UnityEngine;
-using UnityEngine.UI;
 
 namespace OreExtractorTweaks_Plugin
 {
