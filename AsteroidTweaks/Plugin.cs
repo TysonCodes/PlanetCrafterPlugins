@@ -3,6 +3,7 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using MijuTools;
 using SpaceCraft;
 using UnityEngine.InputSystem;
 
@@ -14,10 +15,12 @@ namespace AsteroidTweaks_Plugin
     {
         private static ConfigEntry<float> configDebrisDestroyTimeMultiplier;
         private ConfigEntry<Key> configSpawnRandomMeteoEventHotkey;
+        private ConfigEntry<bool> configOnlyAsteroidEvents;
         private static MeteoHandler meteoHandlerInstance;
         private static MethodInfo launchRandomMeteoEventMethod;
         private static MethodInfo queueMeteoEventMethod;
-        private static MeteoEventData fullRedMeteoEvent;
+        private static List<MeteoEventData> asteroidEvents = null;
+        private static WorldUnitsHandler worldUnitsHandler;
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
@@ -28,6 +31,7 @@ namespace AsteroidTweaks_Plugin
                 "Note this will also affect how long resource spawns last.");
             configSpawnRandomMeteoEventHotkey = Config.Bind("General", "Spawn_Random_Meteo_Event_Hotkey", Key.F3, 
                 "Pick the key to use to spawn a random meteo event if no event is happening.");
+            configOnlyAsteroidEvents = Config.Bind("General", "Only_Aseroid_Events", false, "Limit random meteo events to those that have asteroids.");
 
             harmony.PatchAll(typeof(AsteroidTweaks_Plugin.Plugin));
 
@@ -38,12 +42,24 @@ namespace AsteroidTweaks_Plugin
 		{
             if (Keyboard.current[configSpawnRandomMeteoEventHotkey.Value].wasPressedThisFrame)
 			{
-                Logger.LogInfo("Key Pressed");
                 if (meteoHandlerInstance != null)
                 {
-                    Logger.LogInfo("Launching event - " + fullRedMeteoEvent.name);
-                    queueMeteoEventMethod.Invoke(meteoHandlerInstance, new object[] {fullRedMeteoEvent});
-                    //launchRandomMeteoEventMethod.Invoke(meteoHandlerInstance, new object[] {});
+                    if (configOnlyAsteroidEvents.Value && asteroidEvents.Count > 0)
+                    {
+                        var availableAsteroidEvents = asteroidEvents.FindAll((MeteoEventData eventData) => 
+                            worldUnitsHandler.IsWorldValuesAreBetweenStages(eventData.GetMeteoStartTerraformStage(), eventData.GetMeteoStopTerraformStage()));
+                        if (availableAsteroidEvents.Count > 0)
+                        {
+                            var selectedEvent = availableAsteroidEvents[UnityEngine.Random.Range(0, availableAsteroidEvents.Count)];
+                            Logger.LogInfo("Launching '" + selectedEvent.name + "' Meteo Event");
+                            queueMeteoEventMethod.Invoke(meteoHandlerInstance, new object[] {selectedEvent});
+                        }
+                    }
+                    else
+                    {
+                        Logger.LogInfo("Launching random Meteo Event");
+                        launchRandomMeteoEventMethod.Invoke(meteoHandlerInstance, new object[] {});
+                    }
                 }
 			}
 		}
@@ -55,7 +71,8 @@ namespace AsteroidTweaks_Plugin
             meteoHandlerInstance = __instance;
             launchRandomMeteoEventMethod = HarmonyLib.AccessTools.Method(typeof(MeteoHandler), "LaunchRandomMeteoEvent");
             queueMeteoEventMethod = HarmonyLib.AccessTools.Method(typeof(MeteoHandler), "QueueMeteoEvent");
-            fullRedMeteoEvent = __instance.meteoEvents.Find((MeteoEventData mEvent) => mEvent.name.Contains("Red"));
+            asteroidEvents = __instance.meteoEvents.FindAll((MeteoEventData mEvent) => mEvent.asteroidEventData != null);
+            worldUnitsHandler = Managers.GetManager<WorldUnitsHandler>();
         } 
 
         [HarmonyPostfix]

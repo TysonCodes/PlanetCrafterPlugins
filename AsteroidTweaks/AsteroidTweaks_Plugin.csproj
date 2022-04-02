@@ -31,6 +31,9 @@
     <Reference Include="UnityInputSystem">
       <HintPath>$(GameLibrariesFolder)Unity.InputSystem.dll</HintPath>
     </Reference>
+    <Reference Include="Miju-Tools">
+      <HintPath>$(GameLibrariesFolder)com.mijugames.miju-tools.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
