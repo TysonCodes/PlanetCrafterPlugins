@@ -23,6 +23,7 @@ namespace Teleporters_Plugin
     public class Plugin : BaseUnityPlugin
     {
         private static ManualLogSource bepInExLogger;
+        private static ConfigEntry<float> configTeleporterPowerUsage;
         private static ConfigEntry<string> configListOfIngredientForTeleporter;
         private AssetBundle teleporterAssetBundle;
         private List<GameObject> assetBundleGameObjects = new List<GameObject>();
@@ -37,6 +38,7 @@ namespace Teleporters_Plugin
         {
             bepInExLogger = Logger;
 
+            configTeleporterPowerUsage = Config.Bind("Teleporter_Parameters", "Teleporter_Power_Usage", 300.0f, "How much power the teleporter should use.");
             configListOfIngredientForTeleporter = Config.Bind("Teleporter_Parameters", "List_Of_Ingredient_For_Teleporter", 
                 "{\"ingredientNames\" : [\"Rod-iridium\", \"Rod-iridium\", \"Rod-iridium\", \"Rod-uranium\", \"Rod-uranium\", \"Rod-uranium\", \"RedPowder1\", \"PulsarQuartz\", \"Alloy\"]}",
                 "List of ingredients to build a teleporter. Specify as JSON object (see default).");
@@ -70,7 +72,7 @@ namespace Teleporters_Plugin
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {
             GenerateTeleportRecipeIngredientsList(___groupsData);
-            
+
             // Index all of the existing group data
             foreach (var groupData in ___groupsData)
             {
@@ -82,6 +84,7 @@ namespace Teleporters_Plugin
             {
                 if (constructible.id == TELEPORT_ID)
                 {
+                    constructible.unitGenerationEnergy = -1.0f * configTeleporterPowerUsage.Value;
                     constructible.recipeIngredients = teleportRecipeIngredients;
                 }
                 AddGroupDataToList(ref ___groupsData, constructible);
