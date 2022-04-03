@@ -34,6 +34,9 @@
     <Reference Include="Miju-Tools">
       <HintPath>$(GameLibrariesFolder)com.mijugames.miju-tools.dll</HintPath>
     </Reference>
+     <Reference Include="TextMeshPro">
+      <HintPath>$(GameLibrariesFolder)Unity.TextMeshPro.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -42,5 +45,6 @@
 
   <Target Name="CopyDLLs" AfterTargets="Build">
     <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)" />
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="C:\Users\Tyson\Documents\Projects\PlanetCrafterEditing\SceneExport\FullEA\Planet Crafter\Assets\Portal" />
   </Target>
 </Project>
