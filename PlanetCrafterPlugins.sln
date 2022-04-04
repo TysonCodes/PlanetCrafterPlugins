@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AsteroidTweaks_Plugin", "As
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Teleporters_Plugin", "Teleporters\Teleporters_Plugin.csproj", "{C578FB47-566F-40EE-AC98-D5437E11E428}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zeolite_Plugin", "Zeolite\Zeolite_Plugin.csproj", "{8EB1F636-A758-474A-B92A-C79F1B942349}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +56,9 @@ Global
 		{C578FB47-566F-40EE-AC98-D5437E11E428}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C578FB47-566F-40EE-AC98-D5437E11E428}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C578FB47-566F-40EE-AC98-D5437E11E428}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EB1F636-A758-474A-B92A-C79F1B942349}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EB1F636-A758-474A-B92A-C79F1B942349}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EB1F636-A758-474A-B92A-C79F1B942349}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EB1F636-A758-474A-B92A-C79F1B942349}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
