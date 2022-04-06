@@ -17,19 +17,29 @@ namespace Zeolite_Plugin
     [BepInProcess("Planet Crafter.exe")]
     public class Plugin : BaseUnityPlugin
     {
+        private static ConfigEntry<bool> configZeoliteCraftingEnabled;
         private ConfigEntry<string> configListOfIngredientForZeolite;
+        private static ConfigEntry<bool> configFabricCraftingEnabled;
+        private ConfigEntry<string> configListOfIngredientForFabric;
 
         private static RecipeList zeoliteRecipeList;
+        private static RecipeList fabricRecipeList;
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
         private void Awake()
         {
+            configZeoliteCraftingEnabled = Config.Bind("Zeolite", "Zeolite_Crafting_Enabled", true, "Enable/disable crafting of Zeolite.");
             configListOfIngredientForZeolite = Config.Bind("Zeolite", "List_Of_Ingredient_For_Zeolite", 
                 "{\"ingredientNames\" : [\"Bioplastic1\", \"Fertilizer2\", \"Mutagen1\"]}",
                 "List of ingredients to craft Zeolite. Specify as JSON object (see default).");
+            configFabricCraftingEnabled = Config.Bind("Fabric", "Fabric_Crafting_Enabled", true, "Enable/disable crafting of Fabric.");
+            configListOfIngredientForFabric = Config.Bind("Fabric", "List_Of_Ingredient_For_Fabric", 
+                "{\"ingredientNames\" : [\"Bioplastic1\", \"Bioplastic1\", \"Cobalt\"]}",
+                "List of ingredients to craft Fabric. Specify as JSON object (see default).");
 
             zeoliteRecipeList = JsonUtility.FromJson<RecipeList>(configListOfIngredientForZeolite.Value);
+            fabricRecipeList = JsonUtility.FromJson<RecipeList>(configListOfIngredientForFabric.Value);
 
             harmony.PatchAll(typeof(Zeolite_Plugin.Plugin));
 
@@ -40,10 +50,22 @@ namespace Zeolite_Plugin
         [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {
-            GroupDataItem zeolite = ___groupsData.Find((GroupData gData) => gData.id == "Zeolite") as GroupDataItem;
-            zeolite.craftableInList.Add(DataConfig.CraftableIn.CraftBioLab);
-            zeolite.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
-            zeolite.recipeIngredients = GenerateRecipeIngredientsList(___groupsData, zeoliteRecipeList.ingredientNames);
+            if (configZeoliteCraftingEnabled.Value)
+            {
+                GroupDataItem zeolite = ___groupsData.Find((GroupData gData) => gData.id == "Zeolite") as GroupDataItem;
+                zeolite.craftableInList.Add(DataConfig.CraftableIn.CraftBioLab);
+                zeolite.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
+                zeolite.recipeIngredients = GenerateRecipeIngredientsList(___groupsData, zeoliteRecipeList.ingredientNames);
+            }
+
+            if (configFabricCraftingEnabled.Value)
+            {
+                GroupDataItem fabric = ___groupsData.Find((GroupData gData) => gData.id == "FabricBlue") as GroupDataItem;
+                fabric.craftableInList.Add(DataConfig.CraftableIn.CraftStationT2);
+                fabric.craftableInList.Add(DataConfig.CraftableIn.CraftStationT3);
+                fabric.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
+                fabric.recipeIngredients = GenerateRecipeIngredientsList(___groupsData, fabricRecipeList.ingredientNames);
+            }
 
             return true;
         }
