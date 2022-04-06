@@ -16,6 +16,9 @@ namespace RecipeExportImport_Plugin
     public class Plugin : BaseUnityPlugin
     {
         private static ManualLogSource bepInExLogger;
+
+        private static ConfigEntry<bool> configExportRecipeList;
+
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
@@ -23,6 +26,9 @@ namespace RecipeExportImport_Plugin
         private void Awake()
         {
             bepInExLogger = Logger;
+
+            configExportRecipeList = Config.Bind("General", "Export_Recipe_List", false, 
+                "Enables or disables exporting the current recipe list on loading of the game. Slows down loading.");
 
             harmony.PatchAll(typeof(RecipeExportImport_Plugin.Plugin));
 
@@ -40,7 +46,10 @@ namespace RecipeExportImport_Plugin
             }
             bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
 
-            ExportGroupDataToFile();
+            if (configExportRecipeList.Value)
+            {
+                ExportGroupDataToFile();
+            }
 
             return true;
         }
