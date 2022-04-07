@@ -7,10 +7,8 @@ using UnityEngine;
 class ExportableGroupData
 {
     public string id;
-    public bool associatedGameObject_FromExistingRecipe;
-    public string associatedGameObject_Name;
-    public bool icon_FromExistingRecipe;
-    public string icon_Name;
+    public string associatedGameObject;
+    public string icon;
     public List<string> recipeIngredients;
     public bool hideInCrafter;
     public DataConfig.WorldUnitType unlockingWorldUnit;
@@ -21,10 +19,8 @@ class ExportableGroupData
     protected ExportableGroupData(GroupData data)
     {
         id = data.id;
-        associatedGameObject_FromExistingRecipe = true;
-        associatedGameObject_Name = data.id;
-        icon_FromExistingRecipe = true;
-        icon_Name = data.id;
+        associatedGameObject = data.associatedGameObject ? data.associatedGameObject.name : "None";
+        icon = data.icon ? data.icon.name : "None";
         recipeIngredients = new List<string>(data.recipeIngredients.Count);
         foreach (GroupDataItem ingredient in data.recipeIngredients)
         {
@@ -33,7 +29,7 @@ class ExportableGroupData
         hideInCrafter = data.hideInCrafter;
         unlockingWorldUnit = data.unlockingWorldUnit;
         unlockingValue = data.unlockingValue;
-        terraformStageUnlock = (data.terraformStageUnlock == null) ? "None" : data.terraformStageUnlock.GetTerraId();
+        terraformStageUnlock = data.terraformStageUnlock ? data.terraformStageUnlock.GetTerraId() : "None";
         inventorySize = data.inventorySize;
     }
 }
@@ -63,7 +59,7 @@ class ExportableGroupDataItem : ExportableGroupData
         equipableType = item.equipableType;
         usableType = item.usableType;
         itemCategory = item.itemCategory;
-        growableGroup = (item.growableGroup == null) ? "None" : item.growableGroup.id;
+        growableGroup = item.growableGroup ? item.growableGroup.id : "None";
         associatedGroups = new List<string>(item.associatedGroups.Count);
         foreach (GroupData data in item.associatedGroups)
         {

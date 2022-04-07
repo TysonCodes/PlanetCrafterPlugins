@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using BepInEx;
@@ -8,6 +9,8 @@ using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
 using UnityEngine.UI;
+using Newtonsoft.Json;
+using System.Linq;
 
 namespace RecipeExportImport_Plugin
 {
