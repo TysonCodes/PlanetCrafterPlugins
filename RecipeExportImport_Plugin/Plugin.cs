@@ -10,7 +10,7 @@ using SpaceCraft;
 using UnityEngine;
 using UnityEngine.UI;
 using Newtonsoft.Json;
-using System.Linq;
+using Newtonsoft.Json.Linq;
 
 namespace RecipeExportImport_Plugin
 {
@@ -18,6 +18,12 @@ namespace RecipeExportImport_Plugin
     [BepInProcess("Planet Crafter.exe")]
     public class Plugin : BaseUnityPlugin
     {
+        private delegate void ApplyOverride(GroupData groupToEdit, string valueToEdit, JToken newValue);
+
+        private const string EXPORT_FILE_NAME = "CurrentRecipeList.json";
+        private const string IMPORT_FILE_NAME = "RecipesToModifyAndAdd.jsonc";
+        private static Dictionary<string, ApplyOverride> overrideDelegates;
+
         private static ManualLogSource bepInExLogger;
 
         private static ConfigEntry<bool> configExportRecipeList;
@@ -26,6 +32,42 @@ namespace RecipeExportImport_Plugin
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
+        public Plugin()
+        {
+            overrideDelegates = new Dictionary<string, ApplyOverride>();
+            overrideDelegates["recipeIngredients"] = ApplyRecipeOverride;
+            overrideDelegates["craftableInList"] = ApplyCraftableInListOverride;
+            overrideDelegates["unlockingWorldUnit"] = ApplyUnlockingWorldUnitOverride;
+        }
+
+        private static void ApplyRecipeOverride(GroupData groupToEdit, string valueToEdit, JToken newValue)
+        {
+            List<string> newIngredients = newValue.ToObject<List<string>>();
+            groupToEdit.recipeIngredients = GenerateRecipeIngredientsList(newIngredients);
+        }
+
+        private static List<GroupDataItem> GenerateRecipeIngredientsList(List<string> ingredientIds)
+        {
+            List<GroupDataItem> ingredients = new List<GroupDataItem>();
+
+            foreach (string id in ingredientIds)
+            {
+                ingredients.Add(groupDataById[id] as GroupDataItem);
+            }
+
+            return ingredients;
+        }
+
+        private void ApplyCraftableInListOverride(GroupData groupToEdit, string valueToEdit, JToken newValue)
+        {
+            (groupToEdit as GroupDataItem).craftableInList = newValue.ToObject<List<DataConfig.CraftableIn>>();
+        }
+
+        private void ApplyUnlockingWorldUnitOverride(GroupData groupToEdit, string valueToEdit, JToken newValue)
+        {
+            groupToEdit.unlockingWorldUnit = newValue.ToObject<DataConfig.WorldUnitType>();
+        }
+        
         private void Awake()
         {
             bepInExLogger = Logger;
@@ -54,12 +96,14 @@ namespace RecipeExportImport_Plugin
                 ExportGroupDataToFile();
             }
 
+            ApplyChangesToGroupDataFromFile();
+
             return true;
         }
 
         private static void ExportGroupDataToFile()
         {
-            string exportFileName = Path.Combine(Paths.PluginPath, "CurrentRecipeList.json");
+            string exportFileName = Path.Combine(Paths.PluginPath, EXPORT_FILE_NAME);
             FileStream exportFile = File.Open(exportFileName, FileMode.Create);
             StringBuilder jsonStringBuilder = new StringBuilder("{", 100000);
             foreach (var entry in groupDataById)
@@ -80,6 +124,35 @@ namespace RecipeExportImport_Plugin
             string jsonString = jsonStringBuilder.ToString();
             exportFile.Write(Encoding.UTF8.GetBytes(jsonString), 0, jsonString.Length);
             exportFile.Close();
+        }
+
+        private static void ApplyChangesToGroupDataFromFile()
+        {
+            string importFilename = Path.Combine(Paths.PluginPath, IMPORT_FILE_NAME);
+            JObject rootObject = JObject.Parse(File.ReadAllText(importFilename));
+            foreach (var modification in (JObject) rootObject["Modifications"])
+            {
+                if (groupDataById.ContainsKey(modification.Key))
+                {
+                    bepInExLogger.LogInfo($"Modifying {modification.Key}");
+                    foreach (var overriddenValue in (JObject)modification.Value)
+                    {
+                        if (overrideDelegates.ContainsKey(overriddenValue.Key))
+                        {
+                            bepInExLogger.LogInfo($"\tOverriding {overriddenValue.Key}");
+                            overrideDelegates[overriddenValue.Key].Invoke(groupDataById[modification.Key], overriddenValue.Key, overriddenValue.Value);
+                        }
+                        else
+                        {
+                            bepInExLogger.LogWarning($"\tUnsupported override '{overriddenValue.Key}'");
+                        }
+                    }
+                }
+                else
+                {
+                    bepInExLogger.LogWarning($"Can't modify unknown object {modification.Key}");
+                }
+            }
         }
 
         private void OnDestroy()
