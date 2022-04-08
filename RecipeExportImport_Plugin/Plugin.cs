@@ -31,6 +31,8 @@ namespace RecipeExportImport_Plugin
 
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
         private static Dictionary<string, TerraformStage> terraformStageById = new Dictionary<string, TerraformStage>();
+        private static Dictionary<string, GameObject> gameObjectById = new Dictionary<string, GameObject>();
+        private static Dictionary<string, Sprite> iconById = new Dictionary<string, Sprite>();
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
@@ -40,12 +42,43 @@ namespace RecipeExportImport_Plugin
             
             // GroupData
             overrideDelegates["recipeIngredients"] = (groupToEdit, valueToEidt, newValue) => {groupToEdit.recipeIngredients = GenerateGroupDataItemList(newValue.ToObject<List<string>>()); };
-                // TODO: GameObject associatedGameObject;
-                // TODO: Sprite icon;
+            overrideDelegates["associatedGameObject"] = (groupToEdit, valueToEidt, newValue) =>
+            {
+                string associatedGameObjectName = newValue.ToObject<string>();
+                if (!gameObjectById.ContainsKey(associatedGameObjectName))
+                {
+                    bepInExLogger.LogWarning($"Attempt to set 'associatedGameObject' to unknown GameObject '{associatedGameObjectName}'");
+                }
+                else
+                {
+                    groupToEdit.associatedGameObject = gameObjectById[associatedGameObjectName];
+                }
+            };
+            overrideDelegates["icon"] = (groupToEdit, valueToEidt, newValue) =>
+            {
+                string iconName = newValue.ToObject<string>();
+                if (!iconById.ContainsKey(iconName))
+                {
+                    bepInExLogger.LogWarning($"Attempt to set 'icon' to unknown Sprite '{iconName}'");
+                }
+                else
+                {
+                    groupToEdit.icon = iconById[iconName];
+                }
+            };
             overrideDelegates["hideInCrafter"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.hideInCrafter = newValue.ToObject<bool>(); };
             overrideDelegates["unlockingWorldUnit"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingWorldUnit = newValue.ToObject<DataConfig.WorldUnitType>(); };
             overrideDelegates["unlockingValue"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<float>(); };
-            overrideDelegates["terraformStageUnlock"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.terraformStageUnlock = terraformStageById[newValue.ToObject<string>()]; };
+            overrideDelegates["terraformStageUnlock"] = (groupToEdit, valueToEidt, newValue) => { 
+                string terraformStageId = newValue.ToObject<string>();
+                if (!terraformStageById.ContainsKey(terraformStageId))
+                {
+                    bepInExLogger.LogWarning($"Attempt to set 'terraformStageUnlock' to unknown stage '{terraformStageId}'");
+                }
+                else
+                {
+                    groupToEdit.terraformStageUnlock = terraformStageById[terraformStageId];
+                }};
             overrideDelegates["inventorySize"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<int>(); };
 
             // GroupDataItem
@@ -134,6 +167,14 @@ namespace RecipeExportImport_Plugin
             foreach (var groupData in groupsData)
             {
                 groupDataById[groupData.id] = groupData;
+                if (groupData.associatedGameObject)
+                {
+                    gameObjectById[groupData.associatedGameObject.name] = groupData.associatedGameObject;
+                }
+                if (groupData.icon)
+                {
+                    iconById[groupData.icon.name] = groupData.icon;
+                }
             }
             bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
 
