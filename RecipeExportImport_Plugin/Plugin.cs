@@ -315,13 +315,16 @@ namespace RecipeExportImport_Plugin
 
         private static void AddGroupDataToList(GroupData toAdd)
         {
-            bepInExLogger.LogInfo($"Adding {toAdd.id} to group data.");
             bool alreadyExists = groupDataById.ContainsKey(toAdd.id);
-            gameGroupData.Add(toAdd);
-            groupDataById[toAdd.id] = toAdd;
             if (alreadyExists)
             {
-                bepInExLogger.LogWarning($"Adding duplicate group data with id '{toAdd.id}'");
+                bepInExLogger.LogWarning($"Skipping duplicate group data with id '{toAdd.id}'");
+            }
+            else
+            {
+                bepInExLogger.LogInfo($"Adding {toAdd.id} to group data.");
+                gameGroupData.Add(toAdd);
+                groupDataById[toAdd.id] = toAdd;
             }
         }
 
