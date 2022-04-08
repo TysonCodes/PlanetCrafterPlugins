@@ -33,6 +33,7 @@ namespace RecipeExportImport_Plugin
 
         private static ConfigEntry<bool> configExportRecipeList;
 
+        private static List<GroupData> gameGroupData;
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
         private static Dictionary<string, TerraformStage> terraformStageById = new Dictionary<string, TerraformStage>();
         private static Dictionary<string, GameObject> gameObjectById = new Dictionary<string, GameObject>();
@@ -163,7 +164,10 @@ namespace RecipeExportImport_Plugin
         [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {
-            LoadData(___groupsData);
+            // Save reference to group data.
+            gameGroupData = ___groupsData;
+
+            LoadData();
 
             if (configExportRecipeList.Value)
             {
@@ -176,10 +180,10 @@ namespace RecipeExportImport_Plugin
             return true;
         }
 
-        private static void LoadData(List<GroupData> groupsData)
+        private static void LoadData()
         {
             // Index all of the existing group data
-            foreach (var groupData in groupsData)
+            foreach (var groupData in gameGroupData)
             {
                 groupDataById[groupData.id] = groupData;
                 if (groupData.associatedGameObject)
@@ -239,17 +243,9 @@ namespace RecipeExportImport_Plugin
             {
                 AddItem(itemToAdd);
             }
-        }
-
-        private static void AddItem(KeyValuePair<string, JToken> itemToAdd)
-        {
-            bepInExLogger.LogInfo($"Adding new item '{itemToAdd.Key}'");
-            GroupDataItem newItem = ScriptableObject.CreateInstance<GroupDataItem>();
-            newItem.id = itemToAdd.Key;
-            foreach (var setting in (JObject)itemToAdd.Value)
+            foreach (var buildingToAdd in (JObject)rootObject["BuildingsToAdd"])
             {
-                if (overrideDelegates.ContainsKey(setting.Key))
-                {}
+                AddItem(buildingToAdd);
             }
         }
 
@@ -275,6 +271,58 @@ namespace RecipeExportImport_Plugin
             {
                 bepInExLogger.LogWarning($"Can't modify unknown object {modification.Key}");
             }            
+        }
+
+        private static void AddItem(KeyValuePair<string, JToken> itemToAdd)
+        {
+            bepInExLogger.LogInfo($"Adding new item '{itemToAdd.Key}'");
+            GroupDataItem newItem = ScriptableObject.CreateInstance<GroupDataItem>();
+            newItem.id = itemToAdd.Key;
+            foreach (var setting in (JObject)itemToAdd.Value)
+            {
+                if (groupDataItemDelegates.ContainsKey(setting.Key))
+                {
+                    bepInExLogger.LogInfo($"\tSetting '{setting.Key}'");
+                    groupDataItemDelegates[setting.Key].Invoke(newItem, setting.Key, setting.Value);
+                }
+                else
+                {
+                    bepInExLogger.LogWarning($"\tUnsupported setting '{setting.Key}'");
+                }
+            }
+            AddGroupDataToList(newItem);
+        }
+
+        private static void AddBuilding(KeyValuePair<string, JToken> buildingToAdd)
+        {
+            bepInExLogger.LogInfo($"Adding new building '{buildingToAdd.Key}'");
+            GroupDataConstructible newBuilding = ScriptableObject.CreateInstance<GroupDataConstructible>();
+            newBuilding.id = buildingToAdd.Key;
+            foreach (var setting in (JObject)buildingToAdd.Value)
+            {
+                if (groupDataConstructibleDelegates.ContainsKey(setting.Key))
+                {
+                    bepInExLogger.LogInfo($"\tSetting '{setting.Key}'");
+                    groupDataConstructibleDelegates[setting.Key].Invoke(newBuilding, setting.Key, setting.Value);
+                }
+                else
+                {
+                    bepInExLogger.LogWarning($"\tUnsupported setting '{setting.Key}'");
+                }
+            }
+            AddGroupDataToList(newBuilding);
+        }
+
+        private static void AddGroupDataToList(GroupData toAdd)
+        {
+            bepInExLogger.LogInfo($"Adding {toAdd.id} to group data.");
+            bool alreadyExists = groupDataById.ContainsKey(toAdd.id);
+            gameGroupData.Add(toAdd);
+            groupDataById[toAdd.id] = toAdd;
+            if (alreadyExists)
+            {
+                bepInExLogger.LogWarning($"Adding duplicate group data with id '{toAdd.id}'");
+            }
         }
 
         private void OnDestroy()
