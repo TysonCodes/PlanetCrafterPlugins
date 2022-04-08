@@ -11,6 +11,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using MijuTools;
 
 namespace RecipeExportImport_Plugin
 {
@@ -29,6 +30,7 @@ namespace RecipeExportImport_Plugin
         private static ConfigEntry<bool> configExportRecipeList;
 
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
+        private static Dictionary<string, TerraformStage> terraformStageById = new Dictionary<string, TerraformStage>();
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
@@ -40,10 +42,10 @@ namespace RecipeExportImport_Plugin
             overrideDelegates["recipeIngredients"] = (groupToEdit, valueToEidt, newValue) => {groupToEdit.recipeIngredients = GenerateGroupDataItemList(newValue.ToObject<List<string>>()); };
                 // TODO: GameObject associatedGameObject;
                 // TODO: Sprite icon;
-                overrideDelegates["hideInCrafter"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.hideInCrafter = newValue.ToObject<bool>(); };
+            overrideDelegates["hideInCrafter"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.hideInCrafter = newValue.ToObject<bool>(); };
             overrideDelegates["unlockingWorldUnit"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingWorldUnit = newValue.ToObject<DataConfig.WorldUnitType>(); };
             overrideDelegates["unlockingValue"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<float>(); };
-            // TODO: TerraformStage terraformStageUnlock (lookup by string Id)
+            overrideDelegates["terraformStageUnlock"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.terraformStageUnlock = terraformStageById[newValue.ToObject<string>()]; };
             overrideDelegates["inventorySize"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<int>(); };
 
             // GroupDataItem
@@ -113,21 +115,34 @@ namespace RecipeExportImport_Plugin
         [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
         {
-            // Index all of the existing group data
-            foreach (var groupData in ___groupsData)
-            {
-                groupDataById[groupData.id] = groupData;
-            }
-            bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
+            LoadData(___groupsData);
 
             if (configExportRecipeList.Value)
             {
+                bepInExLogger.LogInfo($"Logging group data to {EXPORT_FILE_NAME}");
                 ExportGroupDataToFile();
             }
 
             ApplyChangesToGroupDataFromFile();
 
             return true;
+        }
+
+        private static void LoadData(List<GroupData> groupsData)
+        {
+            // Index all of the existing group data
+            foreach (var groupData in groupsData)
+            {
+                groupDataById[groupData.id] = groupData;
+            }
+            bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
+
+            // Load Terraform stages
+            List<TerraformStage> terraformStages = Managers.GetManager<TerraformStagesHandler>().GetAllTerraGlobalStages();
+            foreach (TerraformStage stage in terraformStages)
+            {
+                terraformStageById[stage.GetTerraId()] = stage;
+            }
         }
 
         private static void ExportGroupDataToFile()
