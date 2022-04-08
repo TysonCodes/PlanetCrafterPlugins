@@ -87,7 +87,7 @@ namespace RecipeExportImport_Plugin
                 {
                     groupToEdit.terraformStageUnlock = terraformStageById[terraformStageId];
                 }};
-            groupDataDelegates["inventorySize"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<int>(); };
+            groupDataDelegates["inventorySize"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.inventorySize = newValue.ToObject<int>(); };
 
             // GroupDataItem specific
             groupDataItemDelegates["value"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).value = newValue.ToObject<int>(); };
@@ -245,7 +245,7 @@ namespace RecipeExportImport_Plugin
             }
             foreach (var buildingToAdd in (JObject)rootObject["BuildingsToAdd"])
             {
-                AddItem(buildingToAdd);
+                AddBuilding(buildingToAdd);
             }
         }
 
