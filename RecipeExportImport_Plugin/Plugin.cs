@@ -12,6 +12,7 @@ using UnityEngine.UI;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using MijuTools;
+using System.Linq;
 
 namespace RecipeExportImport_Plugin
 {
@@ -19,11 +20,14 @@ namespace RecipeExportImport_Plugin
     [BepInProcess("Planet Crafter.exe")]
     public class Plugin : BaseUnityPlugin
     {
-        private delegate void ApplyOverride(GroupData groupToEdit, string valueToEdit, JToken newValue);
+        private delegate void SetGroupDataValue(GroupData groupToEdit, string valueToEdit, JToken newValue);
 
         private const string EXPORT_FILE_NAME = "CurrentRecipeList.json";
         private const string IMPORT_FILE_NAME = "RecipesToModifyAndAdd.jsonc";
-        private static Dictionary<string, ApplyOverride> overrideDelegates;
+        private static Dictionary<string, SetGroupDataValue> groupDataDelegates;
+        private static Dictionary<string, SetGroupDataValue> groupDataItemDelegates;
+        private static Dictionary<string, SetGroupDataValue> groupDataConstructibleDelegates;
+        private static Dictionary<string, SetGroupDataValue> overrideDelegates;
 
         private static ManualLogSource bepInExLogger;
 
@@ -38,11 +42,14 @@ namespace RecipeExportImport_Plugin
 
         public Plugin()
         {
-            overrideDelegates = new Dictionary<string, ApplyOverride>();
-            
-            // GroupData
-            overrideDelegates["recipeIngredients"] = (groupToEdit, valueToEidt, newValue) => {groupToEdit.recipeIngredients = GenerateGroupDataItemList(newValue.ToObject<List<string>>()); };
-            overrideDelegates["associatedGameObject"] = (groupToEdit, valueToEidt, newValue) =>
+            groupDataDelegates = new Dictionary<string, SetGroupDataValue>();
+            groupDataItemDelegates = new Dictionary<string, SetGroupDataValue>();
+            groupDataConstructibleDelegates = new Dictionary<string, SetGroupDataValue>();
+            overrideDelegates = new Dictionary<string, SetGroupDataValue>();
+
+            // GroupData specific
+            groupDataDelegates["recipeIngredients"] = (groupToEdit, valueToEidt, newValue) => {groupToEdit.recipeIngredients = GenerateGroupDataItemList(newValue.ToObject<List<string>>()); };
+            groupDataDelegates["associatedGameObject"] = (groupToEdit, valueToEidt, newValue) =>
             {
                 string associatedGameObjectName = newValue.ToObject<string>();
                 if (!gameObjectById.ContainsKey(associatedGameObjectName))
@@ -54,7 +61,7 @@ namespace RecipeExportImport_Plugin
                     groupToEdit.associatedGameObject = gameObjectById[associatedGameObjectName];
                 }
             };
-            overrideDelegates["icon"] = (groupToEdit, valueToEidt, newValue) =>
+            groupDataDelegates["icon"] = (groupToEdit, valueToEidt, newValue) =>
             {
                 string iconName = newValue.ToObject<string>();
                 if (!iconById.ContainsKey(iconName))
@@ -66,10 +73,10 @@ namespace RecipeExportImport_Plugin
                     groupToEdit.icon = iconById[iconName];
                 }
             };
-            overrideDelegates["hideInCrafter"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.hideInCrafter = newValue.ToObject<bool>(); };
-            overrideDelegates["unlockingWorldUnit"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingWorldUnit = newValue.ToObject<DataConfig.WorldUnitType>(); };
-            overrideDelegates["unlockingValue"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<float>(); };
-            overrideDelegates["terraformStageUnlock"] = (groupToEdit, valueToEidt, newValue) => { 
+            groupDataDelegates["hideInCrafter"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.hideInCrafter = newValue.ToObject<bool>(); };
+            groupDataDelegates["unlockingWorldUnit"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingWorldUnit = newValue.ToObject<DataConfig.WorldUnitType>(); };
+            groupDataDelegates["unlockingValue"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<float>(); };
+            groupDataDelegates["terraformStageUnlock"] = (groupToEdit, valueToEidt, newValue) => { 
                 string terraformStageId = newValue.ToObject<string>();
                 if (!terraformStageById.ContainsKey(terraformStageId))
                 {
@@ -79,33 +86,41 @@ namespace RecipeExportImport_Plugin
                 {
                     groupToEdit.terraformStageUnlock = terraformStageById[terraformStageId];
                 }};
-            overrideDelegates["inventorySize"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<int>(); };
+            groupDataDelegates["inventorySize"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<int>(); };
 
-            // GroupDataItem
-            overrideDelegates["value"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).value = newValue.ToObject<int>(); };
-            overrideDelegates["craftableInList"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).craftableInList = newValue.ToObject<List<DataConfig.CraftableIn>>(); };
-            overrideDelegates["equipableType"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).equipableType = newValue.ToObject<DataConfig.EquipableType>(); };
-            overrideDelegates["usableType"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).usableType = newValue.ToObject<DataConfig.UsableType>(); };
-            overrideDelegates["itemCategory"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).itemCategory = newValue.ToObject<DataConfig.ItemCategory>(); };
-            overrideDelegates["growableGroup"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).growableGroup = groupDataById[newValue.ToObject<string>()] as GroupDataItem; };
-            overrideDelegates["associatedGroups"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).associatedGroups = GenerateGroupDataList(newValue.ToObject<List<string>>()); };
-            overrideDelegates["assignRandomGroupAtSpawn"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).assignRandomGroupAtSpawn = newValue.ToObject<bool>(); };
-            overrideDelegates["replaceByRandomGroupAtSpawn"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).replaceByRandomGroupAtSpawn = newValue.ToObject<bool>(); };
-            overrideDelegates["unitMultiplierOxygen"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierOxygen = newValue.ToObject<float>(); };
-            overrideDelegates["unitMultiplierPressure"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierPressure = newValue.ToObject<float>(); };
-            overrideDelegates["unitMultiplierHeat"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierHeat = newValue.ToObject<float>(); };
-            overrideDelegates["unitMultiplierEnergy"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierEnergy = newValue.ToObject<float>(); };
-            overrideDelegates["unitMultiplierBiomass"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierBiomass = newValue.ToObject<float>(); };
+            // GroupDataItem specific
+            groupDataItemDelegates["value"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).value = newValue.ToObject<int>(); };
+            groupDataItemDelegates["craftableInList"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).craftableInList = newValue.ToObject<List<DataConfig.CraftableIn>>(); };
+            groupDataItemDelegates["equipableType"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).equipableType = newValue.ToObject<DataConfig.EquipableType>(); };
+            groupDataItemDelegates["usableType"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).usableType = newValue.ToObject<DataConfig.UsableType>(); };
+            groupDataItemDelegates["itemCategory"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).itemCategory = newValue.ToObject<DataConfig.ItemCategory>(); };
+            groupDataItemDelegates["growableGroup"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).growableGroup = groupDataById[newValue.ToObject<string>()] as GroupDataItem; };
+            groupDataItemDelegates["associatedGroups"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).associatedGroups = GenerateGroupDataList(newValue.ToObject<List<string>>()); };
+            groupDataItemDelegates["assignRandomGroupAtSpawn"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).assignRandomGroupAtSpawn = newValue.ToObject<bool>(); };
+            groupDataItemDelegates["replaceByRandomGroupAtSpawn"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).replaceByRandomGroupAtSpawn = newValue.ToObject<bool>(); };
+            groupDataItemDelegates["unitMultiplierOxygen"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierOxygen = newValue.ToObject<float>(); };
+            groupDataItemDelegates["unitMultiplierPressure"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierPressure = newValue.ToObject<float>(); };
+            groupDataItemDelegates["unitMultiplierHeat"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierHeat = newValue.ToObject<float>(); };
+            groupDataItemDelegates["unitMultiplierEnergy"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierEnergy = newValue.ToObject<float>(); };
+            groupDataItemDelegates["unitMultiplierBiomass"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierBiomass = newValue.ToObject<float>(); };
 
-            // GroupDataConstructible
-            overrideDelegates["unitGenerationOxygen"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationOxygen = newValue.ToObject<float>(); };
-            overrideDelegates["unitGenerationPressure"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationPressure = newValue.ToObject<float>(); };
-            overrideDelegates["unitGenerationHeat"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationHeat = newValue.ToObject<float>(); };
-            overrideDelegates["unitGenerationEnergy"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationEnergy = newValue.ToObject<float>(); };
-            overrideDelegates["unitGenerationBiomass"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationBiomass = newValue.ToObject<float>(); };
-            overrideDelegates["rotationFixed"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).rotationFixed = newValue.ToObject<bool>(); };
-            overrideDelegates["groupCategory"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).groupCategory = newValue.ToObject<DataConfig.GroupCategory>(); };
-            overrideDelegates["worlUnitMultiplied"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).worlUnitMultiplied = newValue.ToObject<DataConfig.WorldUnitType>(); };
+            // GroupDataConstructible specific
+            groupDataConstructibleDelegates["unitGenerationOxygen"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationOxygen = newValue.ToObject<float>(); };
+            groupDataConstructibleDelegates["unitGenerationPressure"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationPressure = newValue.ToObject<float>(); };
+            groupDataConstructibleDelegates["unitGenerationHeat"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationHeat = newValue.ToObject<float>(); };
+            groupDataConstructibleDelegates["unitGenerationEnergy"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationEnergy = newValue.ToObject<float>(); };
+            groupDataConstructibleDelegates["unitGenerationBiomass"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).unitGenerationBiomass = newValue.ToObject<float>(); };
+            groupDataConstructibleDelegates["rotationFixed"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).rotationFixed = newValue.ToObject<bool>(); };
+            groupDataConstructibleDelegates["groupCategory"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).groupCategory = newValue.ToObject<DataConfig.GroupCategory>(); };
+            groupDataConstructibleDelegates["worlUnitMultiplied"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataConstructible).worlUnitMultiplied = newValue.ToObject<DataConfig.WorldUnitType>(); };
+
+            // Override (GroupData + GroupDataItem + GroupDataConstructible)
+            groupDataDelegates.ToList().ForEach(x => overrideDelegates.Add(x.Key, x.Value));
+            groupDataItemDelegates.ToList().ForEach(x => overrideDelegates.Add(x.Key, x.Value));
+            groupDataConstructibleDelegates.ToList().ForEach(x => overrideDelegates.Add(x.Key, x.Value));
+
+            // Add GroupData delegates to Items and Constructibles
+            groupDataDelegates.ToList().ForEach(x => { groupDataItemDelegates.Add(x.Key, x.Value); groupDataConstructibleDelegates.Add(x.Key, x.Value);});
         }
 
         private static List<GroupDataItem> GenerateGroupDataItemList(List<string> groupIds)
@@ -217,27 +232,49 @@ namespace RecipeExportImport_Plugin
             JObject rootObject = JObject.Parse(File.ReadAllText(importFilename));
             foreach (var modification in (JObject) rootObject["Modifications"])
             {
-                if (groupDataById.ContainsKey(modification.Key))
+                ApplyModification(modification);
+
+            }
+            foreach (var itemToAdd in (JObject) rootObject["ItemsToAdd"])
+            {
+                AddItem(itemToAdd);
+            }
+        }
+
+        private static void AddItem(KeyValuePair<string, JToken> itemToAdd)
+        {
+            bepInExLogger.LogInfo($"Adding new item '{itemToAdd.Key}'");
+            GroupDataItem newItem = ScriptableObject.CreateInstance<GroupDataItem>();
+            newItem.id = itemToAdd.Key;
+            foreach (var setting in (JObject)itemToAdd.Value)
+            {
+                if (overrideDelegates.ContainsKey(setting.Key))
+                {}
+            }
+        }
+
+        private static void ApplyModification(KeyValuePair<string, JToken> modification)
+        {
+            if (groupDataById.ContainsKey(modification.Key))
+            {
+                bepInExLogger.LogInfo($"Modifying '{modification.Key}'");
+                foreach (var overriddenValue in (JObject)modification.Value)
                 {
-                    bepInExLogger.LogInfo($"Modifying {modification.Key}");
-                    foreach (var overriddenValue in (JObject)modification.Value)
+                    if (overrideDelegates.ContainsKey(overriddenValue.Key))
                     {
-                        if (overrideDelegates.ContainsKey(overriddenValue.Key))
-                        {
-                            bepInExLogger.LogInfo($"\tOverriding {overriddenValue.Key}");
-                            overrideDelegates[overriddenValue.Key].Invoke(groupDataById[modification.Key], overriddenValue.Key, overriddenValue.Value);
-                        }
-                        else
-                        {
-                            bepInExLogger.LogWarning($"\tUnsupported override '{overriddenValue.Key}'");
-                        }
+                        bepInExLogger.LogInfo($"\tOverriding '{overriddenValue.Key}'");
+                        overrideDelegates[overriddenValue.Key].Invoke(groupDataById[modification.Key], overriddenValue.Key, overriddenValue.Value);
+                    }
+                    else
+                    {
+                        bepInExLogger.LogWarning($"\tUnsupported override '{overriddenValue.Key}'");
                     }
                 }
-                else
-                {
-                    bepInExLogger.LogWarning($"Can't modify unknown object {modification.Key}");
-                }
             }
+            else
+            {
+                bepInExLogger.LogWarning($"Can't modify unknown object {modification.Key}");
+            }            
         }
 
         private void OnDestroy()
