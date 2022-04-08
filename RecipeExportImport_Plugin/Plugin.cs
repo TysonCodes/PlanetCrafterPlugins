@@ -36,8 +36,11 @@ namespace RecipeExportImport_Plugin
         {
             overrideDelegates = new Dictionary<string, ApplyOverride>();
             overrideDelegates["recipeIngredients"] = ApplyRecipeOverride;
-            overrideDelegates["craftableInList"] = ApplyCraftableInListOverride;
-            overrideDelegates["unlockingWorldUnit"] = ApplyUnlockingWorldUnitOverride;
+            overrideDelegates["craftableInList"] = (groupToEdit, valueToEidt, newValue) => 
+                {(groupToEdit as GroupDataItem).craftableInList = newValue.ToObject<List<DataConfig.CraftableIn>>();};
+            overrideDelegates["unlockingWorldUnit"] = (groupToEdit, valueToEidt, newValue) =>
+                {groupToEdit.unlockingWorldUnit = newValue.ToObject<DataConfig.WorldUnitType>(); };
+            overrideDelegates[""] = (groupToEdit, valueToEidt, newValue) => {};
         }
 
         private static void ApplyRecipeOverride(GroupData groupToEdit, string valueToEdit, JToken newValue)
@@ -56,16 +59,6 @@ namespace RecipeExportImport_Plugin
             }
 
             return ingredients;
-        }
-
-        private void ApplyCraftableInListOverride(GroupData groupToEdit, string valueToEdit, JToken newValue)
-        {
-            (groupToEdit as GroupDataItem).craftableInList = newValue.ToObject<List<DataConfig.CraftableIn>>();
-        }
-
-        private void ApplyUnlockingWorldUnitOverride(GroupData groupToEdit, string valueToEdit, JToken newValue)
-        {
-            groupToEdit.unlockingWorldUnit = newValue.ToObject<DataConfig.WorldUnitType>();
         }
         
         private void Awake()
