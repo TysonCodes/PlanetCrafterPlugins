@@ -44,6 +44,8 @@ namespace RecipeExportImport_Plugin
         private static Dictionary<string, GameObject> gameObjectById = new Dictionary<string, GameObject>();
         private static Dictionary<string, Sprite> iconById = new Dictionary<string, Sprite>();
 
+        private List<AssetBundle> loadedAssetBundles = new List<AssetBundle>();
+
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
         public Plugin()
@@ -165,9 +167,41 @@ namespace RecipeExportImport_Plugin
             configExportRecipeList = Config.Bind("General", "Export_Recipe_List", false, 
                 "Enables or disables exporting the current recipe list on loading of the game. Slows down loading.");
 
+            try
+            {
+                LoadAssetBundles();
+            }
+            catch(Exception ex)
+            {
+                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to load asset bundles.");
+            }
+
             harmony.PatchAll(typeof(RecipeExportImport_Plugin.Plugin));
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        private void LoadAssetBundles()
+        {
+            string[] assetBundlePaths = Directory.GetFiles(assetBundlePath);
+            foreach (string assetBundlePath in assetBundlePaths)
+            {
+                bepInExLogger.LogInfo($"Loading AssetBundle: '{assetBundlePath}'");
+                AssetBundle curAssetBundle = AssetBundle.LoadFromFile(assetBundlePath);
+                loadedAssetBundles.Add(curAssetBundle);
+                var assetBundleGameObjects = curAssetBundle.LoadAllAssets<GameObject>();
+                foreach (var gameObject in assetBundleGameObjects)
+                {
+                    bepInExLogger.LogInfo($"\tAdding GameObject: '{gameObject.name}'");
+                    gameObjectById[gameObject.name] = gameObject;
+                }
+                var assetBundleSprites = curAssetBundle.LoadAllAssets<Sprite>();
+                foreach (var sprite in assetBundleSprites)
+                {
+                    bepInExLogger.LogInfo($"\tAdding Sprite: '{sprite.name}'");
+                    iconById[sprite.name] = sprite;
+                }
+            }
         }
 
         [HarmonyPrefix]
@@ -352,6 +386,14 @@ namespace RecipeExportImport_Plugin
 
         private void OnDestroy()
         {
+            foreach (var assetBundle in loadedAssetBundles)
+            {
+                if (assetBundle != null)
+                {
+                    assetBundle.Unload(true);
+                }
+            }
+            loadedAssetBundles = null;
             harmony.UnpatchSelf();
         }
     }
