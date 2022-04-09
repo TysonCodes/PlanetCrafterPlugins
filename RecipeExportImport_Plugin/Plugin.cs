@@ -142,7 +142,21 @@ namespace RecipeExportImport_Plugin
 
             foreach (string id in groupIds)
             {
-                result.Add(groupDataById[id] as GroupDataItem);
+                if (groupDataById.ContainsKey(id))
+                {
+                    if (groupDataById[id] is not GroupDataItem)
+                    {
+                        bepInExLogger.LogError($"Attempt to use '{id}' as an item but it isn't one.");
+                    }
+                    else
+                    {
+                        result.Add(groupDataById[id] as GroupDataItem);
+                    }
+                }
+                else
+                {
+                    bepInExLogger.LogError($"Attempt to use item that doesn't exist: '{id}'");
+                }
             }
 
             return result;
@@ -154,7 +168,14 @@ namespace RecipeExportImport_Plugin
 
             foreach (string id in groupIds)
             {
-                result.Add(groupDataById[id]);
+                if (groupDataById.ContainsKey(id))
+                {
+                    result.Add(groupDataById[id]);
+                }
+                else
+                {
+                    bepInExLogger.LogError($"Attempt to use item that doesn't exist: '{id}'");
+                }
             }
 
             return result;
@@ -334,6 +355,9 @@ namespace RecipeExportImport_Plugin
             bepInExLogger.LogInfo($"Adding new item '{itemToAdd.Key}'");
             GroupDataItem newItem = ScriptableObject.CreateInstance<GroupDataItem>();
             newItem.id = itemToAdd.Key;
+            newItem.recipeIngredients = new List<GroupDataItem>();
+            newItem.craftableInList = new List<DataConfig.CraftableIn>();
+            newItem.associatedGroups = new List<GroupData>();
             foreach (var setting in (JObject)itemToAdd.Value)
             {
                 if (groupDataItemDelegates.ContainsKey(setting.Key))
@@ -354,6 +378,7 @@ namespace RecipeExportImport_Plugin
             bepInExLogger.LogInfo($"Adding new building '{buildingToAdd.Key}'");
             GroupDataConstructible newBuilding = ScriptableObject.CreateInstance<GroupDataConstructible>();
             newBuilding.id = buildingToAdd.Key;
+            newBuilding.recipeIngredients = new List<GroupDataItem>();
             foreach (var setting in (JObject)buildingToAdd.Value)
             {
                 if (groupDataConstructibleDelegates.ContainsKey(setting.Key))
