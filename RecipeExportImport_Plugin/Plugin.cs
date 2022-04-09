@@ -50,6 +50,7 @@ namespace RecipeExportImport_Plugin
 
         public Plugin()
         {
+            PrintOutDependencies();
             assetBundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AssetBundles");
             dataFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DataFiles");
             exportFilePath = Path.Combine(dataFilePath, EXPORT_FILE_NAME);
@@ -134,6 +135,26 @@ namespace RecipeExportImport_Plugin
 
             // Add GroupData delegates to Items and Constructibles
             groupDataDelegates.ToList().ForEach(x => { groupDataItemDelegates.Add(x.Key, x.Value); groupDataConstructibleDelegates.Add(x.Key, x.Value);});
+        }
+
+        private void PrintOutDependencies()
+        {
+            Assembly executingAsm = Assembly.GetExecutingAssembly();
+            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            Logger.LogInfo("Executing Assembly: " + executingAsm.GetName());
+            Logger.LogInfo("References:");
+            foreach (var asm in executingAsm.GetReferencedAssemblies())
+            {
+                Logger.LogInfo("\t" + asm.Name);
+                Assembly actualAsm = loadedAssemblies.FirstOrDefault(assembly => assembly.GetName().Name == asm.Name);
+                if (actualAsm != null)
+                {
+                    foreach (var subAsm in actualAsm.GetReferencedAssemblies())
+                    {
+                        Logger.LogInfo("\t\t" + subAsm.Name);
+                    }
+                }
+            }
         }
 
         private static List<GroupDataItem> GenerateGroupDataItemList(List<string> groupIds)
