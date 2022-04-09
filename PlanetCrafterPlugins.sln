@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Teleporters_Plugin", "Telep
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RecipeExportImport_Plugin", "RecipeExportImport_Plugin\RecipeExportImport_Plugin.csproj", "{CE5A728A-FCC1-4F1F-AF0C-F03D9E768072}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DayNightCycleTweaks_Plugin", "DayNightCycleTweaks\DayNightCycleTweaks_Plugin.csproj", "{725C9D0B-B41D-4BBE-A2BA-920EB58F5187}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +56,9 @@ Global
 		{CE5A728A-FCC1-4F1F-AF0C-F03D9E768072}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE5A728A-FCC1-4F1F-AF0C-F03D9E768072}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE5A728A-FCC1-4F1F-AF0C-F03D9E768072}.Release|Any CPU.Build.0 = Release|Any CPU
+		{725C9D0B-B41D-4BBE-A2BA-920EB58F5187}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{725C9D0B-B41D-4BBE-A2BA-920EB58F5187}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{725C9D0B-B41D-4BBE-A2BA-920EB58F5187}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{725C9D0B-B41D-4BBE-A2BA-920EB58F5187}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net46</TargetFramework>
+    <AssemblyName>PlanetCrafterPlugins.DayNightCycleTweaks_Plugin</AssemblyName>
+    <Product>DayNightCycleTweaks</Product>
+    <Description>A plugin to tweak the day/night cycle</Description>
+    <Version>1.0.0</Version>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>latest</LangVersion>
+    <PlanetCrafterFolder>C:\Program Files (x86)\Steam\steamapps\common\The Planet Crafter</PlanetCrafterFolder>
+    <PluginsFolder>$(PlanetCrafterFolder)\BepInEx\plugins</PluginsFolder>
+    <GameLibrariesFolder>$(PlanetCrafterFolder)\Planet Crafter_Data\Managed\</GameLibrariesFolder>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.BaseLib" Version="5.*" />
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
+    <PackageReference Include="UnityEngine.Modules" Version="2020.3.26" IncludeAssets="compile" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="GameLibrary">
+      <HintPath>$(GameLibrariesFolder)Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityUI">
+      <HintPath>$(GameLibrariesFolder)UnityEngine.UI.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <Target Name="CopyDLLs" AfterTargets="Build">
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)" />
+  </Target>
+</Project>
