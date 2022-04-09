@@ -298,10 +298,13 @@ namespace RecipeExportImport_Plugin
             bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
 
             // Load Terraform stages
-            List<TerraformStage> terraformStages = Managers.GetManager<TerraformStagesHandler>().GetAllTerraGlobalStages();
-            foreach (TerraformStage stage in terraformStages)
+            if (Managers.GetManager<TerraformStagesHandler>())
             {
-                terraformStageById[stage.GetTerraId()] = stage;
+                List<TerraformStage> terraformStages = Managers.GetManager<TerraformStagesHandler>().GetAllTerraGlobalStages();
+                foreach (TerraformStage stage in terraformStages)
+                {
+                    terraformStageById[stage.GetTerraId()] = stage;
+                }
             }
         }
 
