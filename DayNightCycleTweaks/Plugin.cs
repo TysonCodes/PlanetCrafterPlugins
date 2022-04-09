@@ -23,6 +23,7 @@ namespace DayNightCycleTweaks_Plugin
         private ConfigEntry<float> configNightTimeInSeconds;
         private ConfigEntry<float> configDayToNightTransitionTimeInSeconds;
         private ConfigEntry<float> configNightToDayTransitionTimeInSeconds;
+        private static ConfigEntry<float> configDayNightUpdatePeriodInSeconds;
 
         private const float DAY_LERP_VALUE = 0.0f;
         private const float NIGHT_LERP_VALUE = 100.0f;
@@ -41,12 +42,14 @@ namespace DayNightCycleTweaks_Plugin
             instance = this;
 
             configModifyDayNightCycle = Config.Bind<bool>("Times", "Modify_Day_Night_Cycle", true, "Whether or not to change the game day/night cycle.");
-            configDayTimeInSeconds = Config.Bind<float>("Times", "Day_Time_In_Seconds", 10.0f, "How long the day should last in seconds.");
-            configNightTimeInSeconds = Config.Bind<float>("Times", "Night_Time_In_Seconds", 8.0f, "How long the night should last in seconds.");
-            configDayToNightTransitionTimeInSeconds = Config.Bind<float>("Times", "Day_To_Night_Transition_Time_In_Seconds", 3.0f, 
+            configDayTimeInSeconds = Config.Bind<float>("Times", "Day_Time_In_Seconds", 960.0f, "How long the day should last in seconds.");
+            configNightTimeInSeconds = Config.Bind<float>("Times", "Night_Time_In_Seconds", 180.0f, "How long the night should last in seconds.");
+            configDayToNightTransitionTimeInSeconds = Config.Bind<float>("Times", "Day_To_Night_Transition_Time_In_Seconds", 140.0f, 
                 "How long for the day->night transition in seconds.");
-            configNightToDayTransitionTimeInSeconds = Config.Bind<float>("Times", "Night_To_Day_Transition_Time_In_Seconds", 5.0f, 
+            configNightToDayTransitionTimeInSeconds = Config.Bind<float>("Times", "Night_To_Day_Transition_Time_In_Seconds", 140.0f, 
                 "How long for the night->day transition in seconds.");
+            configDayNightUpdatePeriodInSeconds = Config.Bind<float>("Times", "Day_Night_Update_Period_In_Seconds", 0.5f, 
+                "How much time to wait between recalculating the day/night cycle. Smaller is smoother but more CPU.");
 
             dayEndLoopTime = configDayTimeInSeconds.Value;
             nightStartLoopTime = dayEndLoopTime + configDayToNightTransitionTimeInSeconds.Value;
@@ -60,20 +63,21 @@ namespace DayNightCycleTweaks_Plugin
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(EnvironmentDayNightCycle), "Start")]
-        private static bool EnvironmentDayNightCycle_Start_Prefix(EnvironmentDayNightCycle __instance, float ___updateCoroutineTime)
+        private static bool EnvironmentDayNightCycle_Start_Prefix(EnvironmentDayNightCycle __instance)
         {
+            bepInExLogger.LogInfo($"fullDayStayTime={__instance.fullDayStayTime}, nightFallSpeed={__instance.nightFallSpeed}");
             if (configModifyDayNightCycle.Value)
             {
-                instance.StartDayNightCycle(___updateCoroutineTime);
+                instance.StartDayNightCycle();
                 return false;
             }
             return true;
         }
 
-        private void StartDayNightCycle(float updateCoroutineTime)
+        private void StartDayNightCycle()
         {
             startLoopTime = Time.time;
-            StartCoroutine(SetDayNightLerpValue(updateCoroutineTime));
+            StartCoroutine(SetDayNightLerpValue(configDayNightUpdatePeriodInSeconds.Value));
         }
 
         private IEnumerator SetDayNightLerpValue(float timeRepeat)
