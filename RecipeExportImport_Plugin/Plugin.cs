@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Text;
 using BepInEx;
 using BepInEx.Configuration;
@@ -32,6 +33,10 @@ namespace RecipeExportImport_Plugin
         private static ManualLogSource bepInExLogger;
 
         private static ConfigEntry<bool> configExportRecipeList;
+        private static string assetBundlePath;
+        private static string dataFilePath;
+        private static string exportFilePath;
+        private static string importFilePath;
 
         private static List<GroupData> gameGroupData;
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
@@ -43,6 +48,11 @@ namespace RecipeExportImport_Plugin
 
         public Plugin()
         {
+            assetBundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AssetBundles");
+            dataFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DataFiles");
+            exportFilePath = Path.Combine(dataFilePath, EXPORT_FILE_NAME);
+            importFilePath = Path.Combine(dataFilePath, IMPORT_FILE_NAME);
+
             groupDataDelegates = new Dictionary<string, SetGroupDataValue>();
             groupDataItemDelegates = new Dictionary<string, SetGroupDataValue>();
             groupDataConstructibleDelegates = new Dictionary<string, SetGroupDataValue>();
@@ -171,11 +181,25 @@ namespace RecipeExportImport_Plugin
 
             if (configExportRecipeList.Value)
             {
-                bepInExLogger.LogInfo($"Logging group data to {EXPORT_FILE_NAME}");
-                ExportGroupDataToFile();
+                bepInExLogger.LogInfo($"Logging group data to {exportFilePath}");
+                try
+                {
+                    ExportGroupDataToFile();
+                }
+                catch (Exception ex)
+                {
+                    bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to export data.");
+                }
             }
 
-            ApplyChangesToGroupDataFromFile();
+            try
+            {
+                ApplyChangesToGroupDataFromFile();
+            }
+            catch (Exception ex)
+            {
+                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to apply modifications/additions.");
+            }
 
             return true;
         }
@@ -207,8 +231,7 @@ namespace RecipeExportImport_Plugin
 
         private static void ExportGroupDataToFile()
         {
-            string exportFileName = Path.Combine(Paths.PluginPath, EXPORT_FILE_NAME);
-            FileStream exportFile = File.Open(exportFileName, FileMode.Create);
+            FileStream exportFile = File.Open(exportFilePath, FileMode.Create);
             StringBuilder jsonStringBuilder = new StringBuilder("{", 100000);
             foreach (var entry in groupDataById)
             {
@@ -232,8 +255,7 @@ namespace RecipeExportImport_Plugin
 
         private static void ApplyChangesToGroupDataFromFile()
         {
-            string importFilename = Path.Combine(Paths.PluginPath, IMPORT_FILE_NAME);
-            JObject rootObject = JObject.Parse(File.ReadAllText(importFilename));
+            JObject rootObject = JObject.Parse(File.ReadAllText(importFilePath));
             foreach (var modification in (JObject) rootObject["Modifications"])
             {
                 ApplyModification(modification);
