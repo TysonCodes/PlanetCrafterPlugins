@@ -18,7 +18,7 @@ namespace PluginFramework
     public class Framework : BaseUnityPlugin
     {
         #region Events
-        public static event Trigger GroupDataLoaded;
+        public static event Trigger StaticGroupDataIndexed;
         #endregion
 
         #region PublicAPI
@@ -138,6 +138,7 @@ namespace PluginFramework
         #endregion
 
         private static ManualLogSource bepInExLogger;
+        private static bool staticDataIsLoaded = false;
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
@@ -204,13 +205,15 @@ namespace PluginFramework
         [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)
         {
+            if (staticDataIsLoaded) {return true;}  // Don't do this twice. Static data is static...
+
             // Save reference to group data.
             gameGroupData = ___groupsData;
 
             IndexExistingGroupData();
             LoadTerraformStages();
+            StaticGroupDataIndexed?.Invoke();
 
-            GroupDataLoaded?.Invoke();
 
             return true;
         }
