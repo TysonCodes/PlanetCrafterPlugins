@@ -14,12 +14,12 @@ namespace SeedSpreaderSeeds_Plugin
     {
         private void Awake()
         {
-            Framework.GroupDataLoaded += OnGroupDataLoaded;
+            Framework.StaticGroupDataIndexed += OnStaticGroupDataIndexed;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        private void OnGroupDataLoaded()
+        private void OnStaticGroupDataIndexed()
         {
             EnablePickingUpGrownItems("SeedSpreader1");
             EnablePickingUpGrownItems("SeedSpreader2");

@@ -57,7 +57,7 @@ namespace Teleporters_Plugin
 
             harmony.PatchAll(typeof(Teleporters_Plugin.Plugin));
 
-            Framework.GroupDataLoaded += OnGroupDataLoaded;
+            Framework.StaticGroupDataIndexed += OnStaticGroupDataIndexed;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
@@ -70,7 +70,7 @@ namespace Teleporters_Plugin
             return true;
         }
         
-        private void OnGroupDataLoaded()
+        private void OnStaticGroupDataIndexed()
         {
             // Add new constructible for teleporter.
             GroupDataConstructible teleporter = Framework.CreateBuilding(TELEPORTER_BUILDING_ID);

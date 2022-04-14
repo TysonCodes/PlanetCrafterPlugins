@@ -152,12 +152,12 @@ namespace RecipeExportImport_Plugin
             configExportRecipeList = Config.Bind("General", "Export_Recipe_List", false, 
                 "Enables or disables exporting the current recipe list on loading of the game. Slows down loading.");
 
-            Framework.GroupDataLoaded += OnGroupDataLoaded;
+            Framework.StaticGroupDataIndexed += OnStaticGroupDataIndexed;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        private void OnGroupDataLoaded()
+        private void OnStaticGroupDataIndexed()
         {
             if (configExportRecipeList.Value)
             {
