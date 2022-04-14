@@ -52,7 +52,7 @@ namespace SeedSpreaderSeeds_Plugin
         private static void EnablePickingUpGrownItems(string machineName)
         {
             // Hack the game object so that it doesn't remove colliders from grown seeds.
-            if (Framework.GameObjectByGroupId(machineName) && Framework.GameObjectByGroupId(machineName)
+            if (Framework.GameObjectByName(machineName) && Framework.GameObjectByName(machineName)
                 .TryGetComponent<MachineOutsideGrower>(out MachineOutsideGrower grower))
             {
                 grower.canRecolt = true;
@@ -61,7 +61,7 @@ namespace SeedSpreaderSeeds_Plugin
 
         private static void MakeGrabbingGrowableReturnSeed(string growableName, string seedName)
         {
-            GameObject growableGO = Framework.GameObjectByGroupId(growableName);
+            GameObject growableGO = Framework.GameObjectByName(growableName);
             growableGO.AddComponent<WorldUniqueId>();
             WorldObjectFromScene seedFromGrowable = growableGO.AddComponent<WorldObjectFromScene>();
             seedFromGrowable.chanceToAppear = 100.0f;

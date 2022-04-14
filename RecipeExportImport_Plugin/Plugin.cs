@@ -299,11 +299,7 @@ namespace RecipeExportImport_Plugin
         private static void AddItem(KeyValuePair<string, JToken> itemToAdd)
         {
             bepInExLogger.LogInfo($"Adding new item '{itemToAdd.Key}'");
-            GroupDataItem newItem = ScriptableObject.CreateInstance<GroupDataItem>();
-            newItem.id = itemToAdd.Key;
-            newItem.recipeIngredients = new List<GroupDataItem>();
-            newItem.craftableInList = new List<DataConfig.CraftableIn>();
-            newItem.associatedGroups = new List<GroupData>();
+            GroupDataItem newItem = Framework.CreateItem(itemToAdd.Key);
             foreach (var setting in (JObject)itemToAdd.Value)
             {
                 if (groupDataItemDelegates.ContainsKey(setting.Key))
@@ -322,9 +318,7 @@ namespace RecipeExportImport_Plugin
         private static void AddBuilding(KeyValuePair<string, JToken> buildingToAdd)
         {
             bepInExLogger.LogInfo($"Adding new building '{buildingToAdd.Key}'");
-            GroupDataConstructible newBuilding = ScriptableObject.CreateInstance<GroupDataConstructible>();
-            newBuilding.id = buildingToAdd.Key;
-            newBuilding.recipeIngredients = new List<GroupDataItem>();
+            GroupDataConstructible newBuilding = Framework.CreateBuilding(buildingToAdd.Key);
             foreach (var setting in (JObject)buildingToAdd.Value)
             {
                 if (groupDataConstructibleDelegates.ContainsKey(setting.Key))

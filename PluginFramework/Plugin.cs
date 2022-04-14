@@ -63,13 +63,34 @@ namespace PluginFramework
             return building as GroupDataConstructible;
         }
 
-        public static GameObject GameObjectByGroupId (string id)
+        public static GameObject GameObjectByName(string name)
         {
-            if (gameObjectById.ContainsKey(id))
-            {
-                return gameObjectById[id];
-            }
-            return null;
+            gameObjectById.TryGetValue(name, out GameObject gameObject);
+            return gameObject;
+        }
+
+        public static Sprite IconByName(string name)
+        {
+            iconById.TryGetValue(name, out Sprite icon);
+            return icon;            
+        }
+
+        public static GroupDataItem CreateItem(string id)
+        {
+            GroupDataItem newItem = ScriptableObject.CreateInstance<GroupDataItem>();
+            newItem.id = id;
+            newItem.recipeIngredients = new List<GroupDataItem>();
+            newItem.craftableInList = new List<DataConfig.CraftableIn>();
+            newItem.associatedGroups = new List<GroupData>();
+            return newItem;
+        }
+
+        public static GroupDataConstructible CreateBuilding(string id)
+        {
+            GroupDataConstructible newBuilding = ScriptableObject.CreateInstance<GroupDataConstructible>();
+            newBuilding.id = id;
+            newBuilding.recipeIngredients = new List<GroupDataItem>();
+            return newBuilding;
         }
 
         public static void AddGroupDataToList(GroupData toAdd)
