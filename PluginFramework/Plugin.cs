@@ -35,17 +35,32 @@ namespace PluginFramework
             }
             catch (Exception ex)
             {
-                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to load asset bundles.");
+                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to load asset bundles from folder: '{folderPath}'.");
             }            
+        }
+
+        public static void LoadAssetBundleFromFile(string fullPathToAssetBundle)
+        {
+            try
+            {
+                LoadAssetBundle(fullPathToAssetBundle);
+            }
+            catch (Exception ex)
+            {
+                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to load asset bundles: '{fullPathToAssetBundle}'.");
+            }
         }
 
         public static GroupDataItem ItemInfoById (string id)
         {
-            if (groupDataById.ContainsKey(id))
-            {
-                return groupDataById[id] as GroupDataItem;
-            }
-            return null;
+            groupDataById.TryGetValue(id, out GroupData item);
+            return item as GroupDataItem;
+        }
+
+        public static GroupDataConstructible BuildingInfoById(string id)
+        {
+            groupDataById.TryGetValue(id, out GroupData building);
+            return building as GroupDataConstructible;
         }
 
         public static GameObject GameObjectByGroupId (string id)
@@ -103,21 +118,37 @@ namespace PluginFramework
             string[] assetBundlePaths = Directory.GetFiles(folderPath);
             foreach (string assetBundlePath in assetBundlePaths)
             {
-                bepInExLogger.LogInfo($"Loading AssetBundle: '{assetBundlePath}'");
-                AssetBundle curAssetBundle = AssetBundle.LoadFromFile(assetBundlePath);
-                loadedAssetBundles.Add(curAssetBundle);
-                var assetBundleGameObjects = curAssetBundle.LoadAllAssets<GameObject>();
-                foreach (var gameObject in assetBundleGameObjects)
-                {
-                    bepInExLogger.LogInfo($"\tAdding GameObject: '{gameObject.name}'");
-                    gameObjectById[gameObject.name] = gameObject;
-                }
-                var assetBundleSprites = curAssetBundle.LoadAllAssets<Sprite>();
-                foreach (var sprite in assetBundleSprites)
-                {
-                    bepInExLogger.LogInfo($"\tAdding Sprite: '{sprite.name}'");
-                    iconById[sprite.name] = sprite;
-                }
+                LoadAssetBundle(assetBundlePath);
+            }
+        }
+
+        private static void LoadAssetBundle(string assetBundlePath)
+        {
+            bepInExLogger.LogInfo($"Loading AssetBundle: '{assetBundlePath}'");
+            AssetBundle curAssetBundle = AssetBundle.LoadFromFile(assetBundlePath);
+            loadedAssetBundles.Add(curAssetBundle);
+
+            LoadGameObjectsFromAssetBundle(curAssetBundle);
+            LoadIconsFromAssetBundle(curAssetBundle);
+        }
+
+        private static void LoadGameObjectsFromAssetBundle(AssetBundle curAssetBundle)
+        {
+            var assetBundleGameObjects = curAssetBundle.LoadAllAssets<GameObject>();
+            foreach (var gameObject in assetBundleGameObjects)
+            {
+                bepInExLogger.LogInfo($"\tAdding GameObject: '{gameObject.name}'");
+                gameObjectById[gameObject.name] = gameObject;
+            }
+        }
+
+        private static void LoadIconsFromAssetBundle(AssetBundle curAssetBundle)
+        {
+            var assetBundleSprites = curAssetBundle.LoadAllAssets<Sprite>();
+            foreach (var sprite in assetBundleSprites)
+            {
+                bepInExLogger.LogInfo($"\tAdding Sprite: '{sprite.name}'");
+                iconById[sprite.name] = sprite;
             }
         }
 
