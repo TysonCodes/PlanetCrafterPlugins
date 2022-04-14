@@ -50,29 +50,29 @@ namespace RecipeExportImport_Plugin
             overrideDelegates = new Dictionary<string, SetGroupDataValue>();
 
             // GroupData specific
-            groupDataDelegates["recipeIngredients"] = (groupToEdit, valueToEidt, newValue) => {groupToEdit.recipeIngredients = GenerateGroupDataItemList(newValue.ToObject<List<string>>()); };
+            groupDataDelegates["recipeIngredients"] = (groupToEdit, valueToEidt, newValue) => {groupToEdit.recipeIngredients = Framework.GroupDataItemListFromIds(newValue.ToObject<List<string>>()); };
             groupDataDelegates["associatedGameObject"] = (groupToEdit, valueToEidt, newValue) =>
             {
                 string associatedGameObjectName = newValue.ToObject<string>();
-                if (!Framework.GameObjectById.ContainsKey(associatedGameObjectName))
+                if (!Framework.GameObjectByName.ContainsKey(associatedGameObjectName))
                 {
                     bepInExLogger.LogWarning($"Attempt to set 'associatedGameObject' to unknown GameObject '{associatedGameObjectName}'");
                 }
                 else
                 {
-                    groupToEdit.associatedGameObject = Framework.GameObjectById[associatedGameObjectName];
+                    groupToEdit.associatedGameObject = Framework.GameObjectByName[associatedGameObjectName];
                 }
             };
             groupDataDelegates["icon"] = (groupToEdit, valueToEidt, newValue) =>
             {
                 string iconName = newValue.ToObject<string>();
-                if (!Framework.IconById.ContainsKey(iconName))
+                if (!Framework.IconByName.ContainsKey(iconName))
                 {
                     bepInExLogger.LogWarning($"Attempt to set 'icon' to unknown Sprite '{iconName}'");
                 }
                 else
                 {
-                    groupToEdit.icon = Framework.IconById[iconName];
+                    groupToEdit.icon = Framework.IconByName[iconName];
                 }
             };
             groupDataDelegates["hideInCrafter"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.hideInCrafter = newValue.ToObject<bool>(); };
@@ -97,7 +97,7 @@ namespace RecipeExportImport_Plugin
             groupDataItemDelegates["usableType"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).usableType = newValue.ToObject<DataConfig.UsableType>(); };
             groupDataItemDelegates["itemCategory"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).itemCategory = newValue.ToObject<DataConfig.ItemCategory>(); };
             groupDataItemDelegates["growableGroup"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).growableGroup = Framework.GroupDataById[newValue.ToObject<string>()] as GroupDataItem; };
-            groupDataItemDelegates["associatedGroups"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).associatedGroups = GenerateGroupDataList(newValue.ToObject<List<string>>()); };
+            groupDataItemDelegates["associatedGroups"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).associatedGroups = Framework.GroupDataListById(newValue.ToObject<List<string>>()); };
             groupDataItemDelegates["assignRandomGroupAtSpawn"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).assignRandomGroupAtSpawn = newValue.ToObject<bool>(); };
             groupDataItemDelegates["replaceByRandomGroupAtSpawn"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).replaceByRandomGroupAtSpawn = newValue.ToObject<bool>(); };
             groupDataItemDelegates["unitMultiplierOxygen"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).unitMultiplierOxygen = newValue.ToObject<float>(); };
@@ -145,51 +145,6 @@ namespace RecipeExportImport_Plugin
             }
         }
 
-        private static List<GroupDataItem> GenerateGroupDataItemList(List<string> groupIds)
-        {
-            List<GroupDataItem> result = new List<GroupDataItem>();
-
-            foreach (string id in groupIds)
-            {
-                if (Framework.GroupDataById.ContainsKey(id))
-                {
-                    if (Framework.GroupDataById[id] is not GroupDataItem)
-                    {
-                        bepInExLogger.LogError($"Attempt to use '{id}' as an item but it isn't one.");
-                    }
-                    else
-                    {
-                        result.Add(Framework.GroupDataById[id] as GroupDataItem);
-                    }
-                }
-                else
-                {
-                    bepInExLogger.LogError($"Attempt to use item that doesn't exist: '{id}'");
-                }
-            }
-
-            return result;
-        }
-
-        private static List<GroupData> GenerateGroupDataList(List<string> groupIds)
-        {
-            List<GroupData> result = new List<GroupData>();
-
-            foreach (string id in groupIds)
-            {
-                if (Framework.GroupDataById.ContainsKey(id))
-                {
-                    result.Add(Framework.GroupDataById[id]);
-                }
-                else
-                {
-                    bepInExLogger.LogError($"Attempt to use item that doesn't exist: '{id}'");
-                }
-            }
-
-            return result;
-        }
-        
         private void Awake()
         {
             bepInExLogger = Logger;

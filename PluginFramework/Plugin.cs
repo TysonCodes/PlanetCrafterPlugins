@@ -24,8 +24,8 @@ namespace PluginFramework
         #region PublicAPI
         public static IReadOnlyDictionary<string, GroupData> GroupDataById {get {return groupDataById;}} 
         public static IReadOnlyDictionary<string, TerraformStage> TerraformStageById {get {return terraformStageById;}}
-        public static IReadOnlyDictionary<string, GameObject> GameObjectById {get {return gameObjectById;}}
-        public static IReadOnlyDictionary<string, Sprite> IconById {get {return iconById;}}
+        public static IReadOnlyDictionary<string, GameObject> GameObjectByName {get {return gameObjectById;}}
+        public static IReadOnlyDictionary<string, Sprite> IconByName {get {return iconById;}}
 
         public static void LoadAssetBundlesFromFolder(string folderPath)
         {
@@ -63,16 +63,43 @@ namespace PluginFramework
             return building as GroupDataConstructible;
         }
 
-        public static GameObject GameObjectByName(string name)
+        public static List<GroupDataItem> GroupDataItemListFromIds(List<string> groupIds)
         {
-            gameObjectById.TryGetValue(name, out GameObject gameObject);
-            return gameObject;
+            List<GroupDataItem> result = new List<GroupDataItem>();
+
+            foreach (string id in groupIds)
+            {
+                GroupDataItem item = ItemInfoById(id);
+                if (item)
+                {
+                    result.Add(item);
+                }
+                else
+                {
+                    bepInExLogger.LogError($"Attempt to use item that doesn't exist: '{id}'");
+                }
+            }
+
+            return result;
         }
 
-        public static Sprite IconByName(string name)
+        public static List<GroupData> GroupDataListById(List<string> groupIds)
         {
-            iconById.TryGetValue(name, out Sprite icon);
-            return icon;            
+            List<GroupData> result = new List<GroupData>();
+
+            foreach (string id in groupIds)
+            {
+                if (groupDataById.ContainsKey(id))
+                {
+                    result.Add(Framework.GroupDataById[id]);
+                }
+                else
+                {
+                    bepInExLogger.LogError($"Attempt to use item that doesn't exist: '{id}'");
+                }
+            }
+
+            return result;
         }
 
         public static GroupDataItem CreateItem(string id)
