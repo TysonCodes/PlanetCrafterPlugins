@@ -18,7 +18,7 @@ namespace PluginFramework
     public class Framework : BaseUnityPlugin
     {
         #region Events
-        public event Trigger GroupDataLoaded;
+        public static event Trigger GroupDataLoaded;
         #endregion
 
         #region PublicAPI
@@ -70,8 +70,14 @@ namespace PluginFramework
         public Framework()
         {
             bepInExLogger = Logger;
-            LoadAssetBundles();
-            GroupDataLoaded?.Invoke();
+            try
+            {
+                LoadAssetBundles();
+            }
+            catch (Exception ex)
+            {
+                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to load asset bundles.");
+            }
         }
 
         private void Awake()
@@ -114,6 +120,8 @@ namespace PluginFramework
 
             IndexExistingGroupData();
             LoadTerraformStages();
+
+            GroupDataLoaded?.Invoke();
 
             return true;
         }
