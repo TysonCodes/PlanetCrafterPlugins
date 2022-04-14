@@ -1,31 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using BepInEx;
-using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
+using PluginFramework;
 
 namespace SeedSpreaderSeeds_Plugin
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
+    [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, PluginFramework.PluginInfo.PLUGIN_VERSION)]    // In BepInEx 5.4.x this ia a minimum version, BepInEx 6.x has range semantics.
     public class Plugin : BaseUnityPlugin
     {
-        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
-
         private void Awake()
         {
-            harmony.PatchAll(typeof(SeedSpreaderSeeds_Plugin.Plugin));
+            Framework.GroupDataLoaded += OnGroupDataLoaded;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
-        private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
+        private void OnGroupDataLoaded()
         {
-            // Hack the seed spreader so that it doesn't remove colliders from grown seeds.
-            EnablePickingUpGrownItems(ref ___groupsData, "SeedSpreader1");
-            EnablePickingUpGrownItems(ref ___groupsData, "SeedSpreader2");
+            EnablePickingUpGrownItems("SeedSpreader1");
+            EnablePickingUpGrownItems("SeedSpreader2");
 
             Dictionary<string, string> seedGrowablesToReplaceAndTheirSeeds = new Dictionary<string, string>()
             {
@@ -39,43 +36,39 @@ namespace SeedSpreaderSeeds_Plugin
                 {"SeedGoldGrowable", "SeedGold"}
             };
 
-            foreach (var growable in seedGrowablesToReplaceAndTheirSeeds.Keys)
+            foreach (var replacement in seedGrowablesToReplaceAndTheirSeeds)
             {
-                MakeGrabbingGrowableReturnSeed(___groupsData, growable, seedGrowablesToReplaceAndTheirSeeds[growable]);
+                try
+                {
+                    MakeGrabbingGrowableReturnSeed(replacement.Key, replacement.Value);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError($"Caught exception '{ex.Message}' trying to modify '{replacement.Key}' to return '{replacement.Value}'.");
+                }
             }
-
-            return true;
         }
 
-        private static void EnablePickingUpGrownItems(ref List<GroupData> groupsData, string machineName)
+        private static void EnablePickingUpGrownItems(string machineName)
         {
-            if (GetGameObjectForGroup(groupsData, machineName)
+            // Hack the game object so that it doesn't remove colliders from grown seeds.
+            if (Framework.GameObjectByGroupId(machineName) && Framework.GameObjectByGroupId(machineName)
                 .TryGetComponent<MachineOutsideGrower>(out MachineOutsideGrower grower))
             {
                 grower.canRecolt = true;
             }
         }
 
-        private static void MakeGrabbingGrowableReturnSeed(List<GroupData> groupData, string growableName, string seedName)
+        private static void MakeGrabbingGrowableReturnSeed(string growableName, string seedName)
         {
-            GameObject growableGO = GetGameObjectForGroup(groupData, growableName);
+            GameObject growableGO = Framework.GameObjectByGroupId(growableName);
             growableGO.AddComponent<WorldUniqueId>();
             WorldObjectFromScene seedFromGrowable = growableGO.AddComponent<WorldObjectFromScene>();
             seedFromGrowable.chanceToAppear = 100.0f;
             seedFromGrowable.randomAppearance = false;
             HarmonyLib.AccessTools.FieldRefAccess<WorldObjectFromScene, GroupData>(seedFromGrowable, "groupData") = 
-                groupData.Find((GroupData gData) => gData.id == seedName);
+                Framework.GroupDataById[seedName];
             growableGO.GetComponent<CapsuleCollider>().isTrigger = true;
-        }
-
-        private static GameObject GetGameObjectForGroup(List<GroupData> groups, string id)
-        {
-            return groups.Find((GroupData gData) => gData.id == id).associatedGameObject;
-        }
-
-        private void OnDestroy()
-        {
-            harmony.UnpatchSelf();
         }
     }
     

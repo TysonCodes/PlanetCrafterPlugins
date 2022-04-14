@@ -48,6 +48,15 @@ namespace PluginFramework
             return null;
         }
 
+        public static GameObject GameObjectByGroupId (string id)
+        {
+            if (gameObjectById.ContainsKey(id))
+            {
+                return gameObjectById[id];
+            }
+            return null;
+        }
+
         public static void AddGroupDataToList(GroupData toAdd)
         {
             bool alreadyExists = groupDataById.ContainsKey(toAdd.id);
