@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -12,9 +14,15 @@ namespace PluginFramework
     [BepInProcess("Planet Crafter.exe")]
     public class Framework : BaseUnityPlugin
     {
+        #region Events
+        //public event 
+        #endregion
+
         private static ManualLogSource bepInExLogger;
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+
+        private const string ASSET_BUNDLE_FOLDER = "AssetBundles";
 
         private static List<GroupData> gameGroupData;
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>();
@@ -22,13 +30,43 @@ namespace PluginFramework
         private static Dictionary<string, GameObject> gameObjectById = new Dictionary<string, GameObject>();
         private static Dictionary<string, Sprite> iconById = new Dictionary<string, Sprite>();
 
-        private void Awake()
+        private List<AssetBundle> loadedAssetBundles = new List<AssetBundle>();
+
+        public Framework()
         {
             bepInExLogger = Logger;
+            LoadAssetBundles();
+        }
 
+        private void Awake()
+        {            
             harmony.PatchAll(typeof(PluginFramework.Framework));
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        private void LoadAssetBundles()
+        {
+            string assetBundleFolderPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ASSET_BUNDLE_FOLDER);
+            string[] assetBundlePaths = Directory.GetFiles(assetBundleFolderPath);
+            foreach (string assetBundlePath in assetBundlePaths)
+            {
+                bepInExLogger.LogInfo($"Loading AssetBundle: '{assetBundlePath}'");
+                AssetBundle curAssetBundle = AssetBundle.LoadFromFile(assetBundlePath);
+                loadedAssetBundles.Add(curAssetBundle);
+                var assetBundleGameObjects = curAssetBundle.LoadAllAssets<GameObject>();
+                foreach (var gameObject in assetBundleGameObjects)
+                {
+                    bepInExLogger.LogInfo($"\tAdding GameObject: '{gameObject.name}'");
+                    gameObjectById[gameObject.name] = gameObject;
+                }
+                var assetBundleSprites = curAssetBundle.LoadAllAssets<Sprite>();
+                foreach (var sprite in assetBundleSprites)
+                {
+                    bepInExLogger.LogInfo($"\tAdding Sprite: '{sprite.name}'");
+                    iconById[sprite.name] = sprite;
+                }
+            }
         }
 
         [HarmonyPrefix]
