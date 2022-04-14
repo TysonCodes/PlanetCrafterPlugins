@@ -6,13 +6,9 @@ using System.Text;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
-using UnityEngine.UI;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using MijuTools;
 using System.Linq;
 using PluginFramework;
 
@@ -20,7 +16,7 @@ namespace RecipeExportImport_Plugin
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
-    [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, ">=" + PluginFramework.PluginInfo.PLUGIN_VERSION)]
+    [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, PluginFramework.PluginInfo.PLUGIN_VERSION)]    // In BepInEx 5.4.x this ia a minimum version, BepInEx 6.x has range semantics.
     public class Plugin : BaseUnityPlugin
     {
         private delegate void SetGroupDataValue(GroupData groupToEdit, string valueToEdit, JToken newValue);
@@ -35,25 +31,13 @@ namespace RecipeExportImport_Plugin
         private static ManualLogSource bepInExLogger;
 
         private static ConfigEntry<bool> configExportRecipeList;
-        private static string assetBundlePath;
         private static string dataFilePath;
         private static string exportFilePath;
         private static string importFilePath;
 
-        private static List<GroupData> gameGroupData;
-        private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>(); 
-        private static Dictionary<string, TerraformStage> terraformStageById = new Dictionary<string, TerraformStage>();
-        private static Dictionary<string, GameObject> gameObjectById = new Dictionary<string, GameObject>();
-        private static Dictionary<string, Sprite> iconById = new Dictionary<string, Sprite>();
-
-        private List<AssetBundle> loadedAssetBundles = new List<AssetBundle>();
-
-        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
-
         public Plugin()
         {
             PrintOutDependencies();
-            assetBundlePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "AssetBundles");
             dataFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DataFiles");
             exportFilePath = Path.Combine(dataFilePath, EXPORT_FILE_NAME);
             importFilePath = Path.Combine(dataFilePath, IMPORT_FILE_NAME);
@@ -68,25 +52,25 @@ namespace RecipeExportImport_Plugin
             groupDataDelegates["associatedGameObject"] = (groupToEdit, valueToEidt, newValue) =>
             {
                 string associatedGameObjectName = newValue.ToObject<string>();
-                if (!gameObjectById.ContainsKey(associatedGameObjectName))
+                if (!Framework.GameObjectById.ContainsKey(associatedGameObjectName))
                 {
                     bepInExLogger.LogWarning($"Attempt to set 'associatedGameObject' to unknown GameObject '{associatedGameObjectName}'");
                 }
                 else
                 {
-                    groupToEdit.associatedGameObject = gameObjectById[associatedGameObjectName];
+                    groupToEdit.associatedGameObject = Framework.GameObjectById[associatedGameObjectName];
                 }
             };
             groupDataDelegates["icon"] = (groupToEdit, valueToEidt, newValue) =>
             {
                 string iconName = newValue.ToObject<string>();
-                if (!iconById.ContainsKey(iconName))
+                if (!Framework.IconById.ContainsKey(iconName))
                 {
                     bepInExLogger.LogWarning($"Attempt to set 'icon' to unknown Sprite '{iconName}'");
                 }
                 else
                 {
-                    groupToEdit.icon = iconById[iconName];
+                    groupToEdit.icon = Framework.IconById[iconName];
                 }
             };
             groupDataDelegates["hideInCrafter"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.hideInCrafter = newValue.ToObject<bool>(); };
@@ -94,13 +78,13 @@ namespace RecipeExportImport_Plugin
             groupDataDelegates["unlockingValue"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.unlockingValue = newValue.ToObject<float>(); };
             groupDataDelegates["terraformStageUnlock"] = (groupToEdit, valueToEidt, newValue) => { 
                 string terraformStageId = newValue.ToObject<string>();
-                if (!terraformStageById.ContainsKey(terraformStageId))
+                if (!Framework.TerraformStageById.ContainsKey(terraformStageId))
                 {
                     bepInExLogger.LogWarning($"Attempt to set 'terraformStageUnlock' to unknown stage '{terraformStageId}'");
                 }
                 else
                 {
-                    groupToEdit.terraformStageUnlock = terraformStageById[terraformStageId];
+                    groupToEdit.terraformStageUnlock = Framework.TerraformStageById[terraformStageId];
                 }};
             groupDataDelegates["inventorySize"] = (groupToEdit, valueToEidt, newValue) => { groupToEdit.inventorySize = newValue.ToObject<int>(); };
 
@@ -110,7 +94,7 @@ namespace RecipeExportImport_Plugin
             groupDataItemDelegates["equipableType"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).equipableType = newValue.ToObject<DataConfig.EquipableType>(); };
             groupDataItemDelegates["usableType"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).usableType = newValue.ToObject<DataConfig.UsableType>(); };
             groupDataItemDelegates["itemCategory"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).itemCategory = newValue.ToObject<DataConfig.ItemCategory>(); };
-            groupDataItemDelegates["growableGroup"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).growableGroup = groupDataById[newValue.ToObject<string>()] as GroupDataItem; };
+            groupDataItemDelegates["growableGroup"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).growableGroup = Framework.GroupDataById[newValue.ToObject<string>()] as GroupDataItem; };
             groupDataItemDelegates["associatedGroups"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).associatedGroups = GenerateGroupDataList(newValue.ToObject<List<string>>()); };
             groupDataItemDelegates["assignRandomGroupAtSpawn"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).assignRandomGroupAtSpawn = newValue.ToObject<bool>(); };
             groupDataItemDelegates["replaceByRandomGroupAtSpawn"] = (groupToEdit, valueToEidt, newValue) => { (groupToEdit as GroupDataItem).replaceByRandomGroupAtSpawn = newValue.ToObject<bool>(); };
@@ -165,15 +149,15 @@ namespace RecipeExportImport_Plugin
 
             foreach (string id in groupIds)
             {
-                if (groupDataById.ContainsKey(id))
+                if (Framework.GroupDataById.ContainsKey(id))
                 {
-                    if (groupDataById[id] is not GroupDataItem)
+                    if (Framework.GroupDataById[id] is not GroupDataItem)
                     {
                         bepInExLogger.LogError($"Attempt to use '{id}' as an item but it isn't one.");
                     }
                     else
                     {
-                        result.Add(groupDataById[id] as GroupDataItem);
+                        result.Add(Framework.GroupDataById[id] as GroupDataItem);
                     }
                 }
                 else
@@ -191,9 +175,9 @@ namespace RecipeExportImport_Plugin
 
             foreach (string id in groupIds)
             {
-                if (groupDataById.ContainsKey(id))
+                if (Framework.GroupDataById.ContainsKey(id))
                 {
-                    result.Add(groupDataById[id]);
+                    result.Add(Framework.GroupDataById[id]);
                 }
                 else
                 {
@@ -211,52 +195,13 @@ namespace RecipeExportImport_Plugin
             configExportRecipeList = Config.Bind("General", "Export_Recipe_List", false, 
                 "Enables or disables exporting the current recipe list on loading of the game. Slows down loading.");
 
-            try
-            {
-                LoadAssetBundles();
-            }
-            catch(Exception ex)
-            {
-                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to load asset bundles.");
-            }
-
-            harmony.PatchAll(typeof(RecipeExportImport_Plugin.Plugin));
+            Framework.GroupDataLoaded += OnGroupDataLoaded;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        private void LoadAssetBundles()
+        private void OnGroupDataLoaded()
         {
-            string[] assetBundlePaths = Directory.GetFiles(assetBundlePath);
-            foreach (string assetBundlePath in assetBundlePaths)
-            {
-                bepInExLogger.LogInfo($"Loading AssetBundle: '{assetBundlePath}'");
-                AssetBundle curAssetBundle = AssetBundle.LoadFromFile(assetBundlePath);
-                loadedAssetBundles.Add(curAssetBundle);
-                var assetBundleGameObjects = curAssetBundle.LoadAllAssets<GameObject>();
-                foreach (var gameObject in assetBundleGameObjects)
-                {
-                    bepInExLogger.LogInfo($"\tAdding GameObject: '{gameObject.name}'");
-                    gameObjectById[gameObject.name] = gameObject;
-                }
-                var assetBundleSprites = curAssetBundle.LoadAllAssets<Sprite>();
-                foreach (var sprite in assetBundleSprites)
-                {
-                    bepInExLogger.LogInfo($"\tAdding Sprite: '{sprite.name}'");
-                    iconById[sprite.name] = sprite;
-                }
-            }
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
-        private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
-        {
-            // Save reference to group data.
-            gameGroupData = ___groupsData;
-
-            LoadData();
-
             if (configExportRecipeList.Value)
             {
                 bepInExLogger.LogInfo($"Logging group data to {exportFilePath}");
@@ -278,43 +223,13 @@ namespace RecipeExportImport_Plugin
             {
                 bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to apply modifications/additions.");
             }
-
-            return true;
-        }
-
-        private static void LoadData()
-        {
-            // Index all of the existing group data
-            foreach (var groupData in gameGroupData)
-            {
-                groupDataById[groupData.id] = groupData;
-                if (groupData.associatedGameObject)
-                {
-                    gameObjectById[groupData.associatedGameObject.name] = groupData.associatedGameObject;
-                }
-                if (groupData.icon)
-                {
-                    iconById[groupData.icon.name] = groupData.icon;
-                }
-            }
-            bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
-
-            // Load Terraform stages
-            if (Managers.GetManager<TerraformStagesHandler>())
-            {
-                List<TerraformStage> terraformStages = Managers.GetManager<TerraformStagesHandler>().GetAllTerraGlobalStages();
-                foreach (TerraformStage stage in terraformStages)
-                {
-                    terraformStageById[stage.GetTerraId()] = stage;
-                }
-            }
         }
 
         private static void ExportGroupDataToFile()
         {
             FileStream exportFile = File.Open(exportFilePath, FileMode.Create);
             StringBuilder jsonStringBuilder = new StringBuilder("{", 100000);
-            foreach (var entry in groupDataById)
+            foreach (var entry in Framework.GroupDataById)
             {
                 if (entry.Value is GroupDataItem)
                 {
@@ -354,7 +269,7 @@ namespace RecipeExportImport_Plugin
 
         private static void ApplyModification(KeyValuePair<string, JToken> modification)
         {
-            if (groupDataById.ContainsKey(modification.Key))
+            if (Framework.GroupDataById.ContainsKey(modification.Key))
             {
                 bepInExLogger.LogInfo($"Modifying '{modification.Key}'");
                 foreach (var overriddenValue in (JObject)modification.Value)
@@ -362,7 +277,7 @@ namespace RecipeExportImport_Plugin
                     if (overrideDelegates.ContainsKey(overriddenValue.Key))
                     {
                         bepInExLogger.LogInfo($"\tOverriding '{overriddenValue.Key}'");
-                        overrideDelegates[overriddenValue.Key].Invoke(groupDataById[modification.Key], overriddenValue.Key, overriddenValue.Value);
+                        overrideDelegates[overriddenValue.Key].Invoke(Framework.GroupDataById[modification.Key], overriddenValue.Key, overriddenValue.Value);
                     }
                     else
                     {
@@ -396,7 +311,7 @@ namespace RecipeExportImport_Plugin
                     bepInExLogger.LogWarning($"\tUnsupported setting '{setting.Key}'");
                 }
             }
-            AddGroupDataToList(newItem);
+            Framework.AddGroupDataToList(newItem);
         }
 
         private static void AddBuilding(KeyValuePair<string, JToken> buildingToAdd)
@@ -417,35 +332,7 @@ namespace RecipeExportImport_Plugin
                     bepInExLogger.LogWarning($"\tUnsupported setting '{setting.Key}'");
                 }
             }
-            AddGroupDataToList(newBuilding);
-        }
-
-        private static void AddGroupDataToList(GroupData toAdd)
-        {
-            bool alreadyExists = groupDataById.ContainsKey(toAdd.id);
-            if (alreadyExists)
-            {
-                bepInExLogger.LogWarning($"Skipping duplicate group data with id '{toAdd.id}'");
-            }
-            else
-            {
-                bepInExLogger.LogInfo($"Adding {toAdd.id} to group data.");
-                gameGroupData.Add(toAdd);
-                groupDataById[toAdd.id] = toAdd;
-            }
-        }
-
-        private void OnDestroy()
-        {
-            foreach (var assetBundle in loadedAssetBundles)
-            {
-                if (assetBundle != null)
-                {
-                    assetBundle.Unload(true);
-                }
-            }
-            loadedAssetBundles = null;
-            harmony.UnpatchSelf();
+            Framework.AddGroupDataToList(newBuilding);
         }
     }
     
