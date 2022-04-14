@@ -19,6 +19,10 @@ namespace PluginFramework
     {
         #region Events
         public static event Trigger StaticGroupDataIndexed;
+        public static event Trigger GameStateLoadingStarted;
+        public static event Trigger GameStateLoaded;
+        public static event Trigger GameStateSavingStarted;
+        public static event Trigger GameStateSaved;
         #endregion
 
         #region PublicAPI
@@ -205,19 +209,48 @@ namespace PluginFramework
         [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
         private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)
         {
+            LoadTerraformStages();  // Always try to load these as sometimes they don't exist the first time.
+
             if (staticDataIsLoaded) {return true;}  // Don't do this twice. Static data is static...
 
             // Save reference to group data.
             gameGroupData = ___groupsData;
-
             IndexExistingGroupData();
-            LoadTerraformStages();
             StaticGroupDataIndexed?.Invoke();
-
 
             return true;
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SavedDataHandler), "LoadSavedData")]
+        private static bool SavedDataHandler_LoadSavedData_Prefix()
+        {
+            GameStateLoadingStarted?.Invoke();
+            return true;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(SavedDataHandler), "LoadSavedData")]
+        private static void SavedDataHandler_LoadSavedData_Postfix()
+        {
+            GameStateLoaded?.Invoke();
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SavedDataHandler), "SaveWorldData")]
+        private static bool SavedDataHandler_SaveWorldData_Prefix()
+        {
+            GameStateSavingStarted?.Invoke();
+            return true;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(SavedDataHandler), "SaveWorldData")]
+        private static void SavedDataHandler_SaveWorldData_Postfix()
+        {
+            GameStateSaved?.Invoke();
+        }
+        
         private static void IndexExistingGroupData()
         {
             foreach (var groupData in gameGroupData)
