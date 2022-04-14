@@ -14,11 +14,13 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using MijuTools;
 using System.Linq;
+using PluginFramework;
 
 namespace RecipeExportImport_Plugin
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
+    [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, ">=" + PluginFramework.PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
         private delegate void SetGroupDataValue(GroupData groupToEdit, string valueToEdit, JToken newValue);
