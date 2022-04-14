@@ -4,7 +4,7 @@ using System.Reflection;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
-using HarmonyLib;
+using MijuTools;
 using SpaceCraft;
 using UnityEngine;
 using PluginFramework;
@@ -34,7 +34,6 @@ namespace Teleporters_Plugin
         private static ConfigEntry<string> configListOfIngredientForTeleporter;
         private static List<GroupDataItem> teleportRecipeIngredients = new List<GroupDataItem>();
         private static GameObject teleportUIGO;
-        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
         private void Awake()
         {
@@ -50,26 +49,20 @@ namespace Teleporters_Plugin
 
             teleportUIGO = Framework.GameObjectByName[TELEPORTER_UI_NAME];
 
-            // Manually patch WindowsHandler as it doesn't seem to work automatically.
-            var original = HarmonyLib.AccessTools.Method(typeof(WindowsHandler), "Start");
-            var prefix = HarmonyLib.AccessTools.Method(typeof(Teleporters_Plugin.Plugin), "WindowsHandler_Start_Prefix");
-            var result = harmony.Patch(original, prefix: new HarmonyMethod(prefix));
-
-            harmony.PatchAll(typeof(Teleporters_Plugin.Plugin));
-
             Framework.StaticGroupDataIndexed += OnStaticGroupDataIndexed;
+            Framework.GameStateLoadingStarted += OnGameStateLoadingStarted;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        private static bool WindowsHandler_Start_Prefix(ref WindowsHandler __instance)
+        private void OnGameStateLoadingStarted()
         {
-            Transform windowsHandlerTransform = __instance.gameObject.transform;
+            WindowsHandler windowsHandler = Managers.GetManager<WindowsHandler>();
+            Transform windowsHandlerTransform = windowsHandler.gameObject.transform;
             var teleportUi = UnityEngine.Object.Instantiate<GameObject>(teleportUIGO, windowsHandlerTransform);
             teleportUi.SetActive(false);
-            return true;
         }
-        
+
         private void OnStaticGroupDataIndexed()
         {
             // Add new constructible for teleporter.
@@ -89,11 +82,6 @@ namespace Teleporters_Plugin
         {
             RecipeList teleporterRecipe = JsonUtility.FromJson<RecipeList>(configListOfIngredientForTeleporter.Value);
             return Framework.GroupDataItemListFromIds(teleporterRecipe.ingredientNames);
-        }
-
-        private void OnDestroy()
-        {
-            harmony.UnpatchSelf();
         }
     }
     
