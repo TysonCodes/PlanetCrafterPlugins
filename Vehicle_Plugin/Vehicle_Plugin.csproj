@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <AssemblyName>PlanetCrafterPlugins.Vehicle_Plugin</AssemblyName>
     <Product>Vehicle</Product>
+    <Version>2.0.0</Version>
+    <AssemblyName>Lathrey-$(Product)</AssemblyName>
     <Description>A plugin to test adding a vehicle with breathable atmosphere and inventory</Description>
-    <Version>1.1.1</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <PlanetCrafterFolder>C:\Program Files (x86)\Steam\steamapps\common\The Planet Crafter</PlanetCrafterFolder>
@@ -42,6 +42,6 @@
   </ItemGroup>
 
   <Target Name="CopyDLLs" AfterTargets="Build">
-    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)" />
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)/Lathrey-$(Product)" />
   </Target>
 </Project>

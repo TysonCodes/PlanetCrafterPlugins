@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <AssemblyName>PlanetCrafterPlugins.RecipeExportImport_Plugin</AssemblyName>
     <Product>RecipeExportImport</Product>
+    <Version>2.0.0</Version>
+    <AssemblyName>Lathrey-$(Product)</AssemblyName>
     <Description>A plugin to export a list of recipes in the game and import changes/additions.</Description>
-    <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <PlanetCrafterFolder>C:\Program Files (x86)\Steam\steamapps\common\The Planet Crafter</PlanetCrafterFolder>

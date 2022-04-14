@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <AssemblyName>PlanetCrafterPlugins.AsteroidTweaks_Plugin</AssemblyName>
     <Product>AsteroidTweaks</Product>
+    <Version>2.0.0</Version>
+    <AssemblyName>Lathrey-$(Product)</AssemblyName>
     <Description>A plugin to tweak asteroid event values</Description>
-    <Version>1.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <PlanetCrafterFolder>C:\Program Files (x86)\Steam\steamapps\common\The Planet Crafter</PlanetCrafterFolder>

@@ -2,10 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
-    <AssemblyName>PlanetCrafterPlugins.PluginFramework</AssemblyName>
     <Product>PluginFramework</Product>
+    <AssemblyName>Lathrey-$(Product)</AssemblyName>
     <Description>Add reusable framework facilities to be used by other plugins.</Description>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>latest</LangVersion>
     <PlanetCrafterFolder>C:\Program Files (x86)\Steam\steamapps\common\The Planet Crafter</PlanetCrafterFolder>
