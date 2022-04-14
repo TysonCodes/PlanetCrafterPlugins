@@ -5,10 +5,9 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
-using MijuTools;
 using SpaceCraft;
 using UnityEngine;
-using UnityEngine.InputSystem;
+using PluginFramework;
 
 namespace Teleporters_Plugin
 {
@@ -20,18 +19,21 @@ namespace Teleporters_Plugin
 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
+    [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, PluginFramework.PluginInfo.PLUGIN_VERSION)]    // In BepInEx 5.4.x this ia a minimum version, BepInEx 6.x has range semantics.
     public class Plugin : BaseUnityPlugin
     {
+        private const string ASSET_BUNDLE_FOLDER = "AssetBundles";
+        private const string ASSET_BUNDLE_NAME = "teleporters";
+        private const string TELEPORTER_PREFAB_NAME = "TeleporterPrefab";
+        private const string TELEPORTER_ICON_NAME = "TeleporterIcon";
+        private const string TELEPORTER_UI_NAME = "TeleporterUI";
+        private static string TELEPORTER_BUILDING_ID = "Portal";
+
         private static ManualLogSource bepInExLogger;
         private static ConfigEntry<float> configTeleporterPowerUsage;
         private static ConfigEntry<string> configListOfIngredientForTeleporter;
-        private AssetBundle teleporterAssetBundle;
-        private List<GameObject> assetBundleGameObjects = new List<GameObject>();
-        private static List<GroupDataConstructible> assetBundleGroupDataConstructibles = new List<GroupDataConstructible>();
-        private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>();
         private static List<GroupDataItem> teleportRecipeIngredients = new List<GroupDataItem>();
         private static GameObject teleportUIGO;
-        private static string TELEPORT_ID = "Portal";
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
         private void Awake()
@@ -42,12 +44,11 @@ namespace Teleporters_Plugin
             configListOfIngredientForTeleporter = Config.Bind("Teleporter_Parameters", "List_Of_Ingredient_For_Teleporter", 
                 "{\"ingredientNames\" : [\"Rod-iridium\", \"Rod-iridium\", \"Rod-iridium\", \"Rod-uranium\", \"Rod-uranium\", \"Rod-uranium\", \"RedPowder1\", \"PulsarQuartz\", \"Alloy\"]}",
                 "List of ingredients to build a teleporter. Specify as JSON object (see default).");
-            
-            teleporterAssetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, "teleporters"));
-            assetBundleGameObjects = new List<GameObject>(teleporterAssetBundle.LoadAllAssets<GameObject>());
-            assetBundleGroupDataConstructibles = new List<GroupDataConstructible>(teleporterAssetBundle.LoadAllAssets<GroupDataConstructible>());
 
-            teleportUIGO = assetBundleGameObjects.Find((GameObject go) => go.name == "TeleportUI");
+            string assetBundleFolderPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ASSET_BUNDLE_FOLDER);
+            Framework.LoadAssetBundleFromFile(Path.Combine(assetBundleFolderPath, ASSET_BUNDLE_NAME));
+
+            teleportUIGO = Framework.GameObjectByName[TELEPORTER_UI_NAME];
 
             // Manually patch WindowsHandler as it doesn't seem to work automatically.
             var original = HarmonyLib.AccessTools.Method(typeof(WindowsHandler), "Start");
@@ -55,6 +56,8 @@ namespace Teleporters_Plugin
             var result = harmony.Patch(original, prefix: new HarmonyMethod(prefix));
 
             harmony.PatchAll(typeof(Teleporters_Plugin.Plugin));
+
+            Framework.GroupDataLoaded += OnGroupDataLoaded;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
@@ -66,68 +69,30 @@ namespace Teleporters_Plugin
             teleportUi.SetActive(false);
             return true;
         }
-                
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
-        private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
+        
+        private void OnGroupDataLoaded()
         {
-            GenerateTeleportRecipeIngredientsList(___groupsData);
+            // Add new constructible for teleporter.
+            GroupDataConstructible teleporter = Framework.CreateBuilding(TELEPORTER_BUILDING_ID);
+            teleporter.associatedGameObject = Framework.GameObjectByName[TELEPORTER_PREFAB_NAME];
+            teleporter.icon = Framework.IconByName[TELEPORTER_ICON_NAME];
+            teleporter.unitGenerationEnergy = -1.0f * configTeleporterPowerUsage.Value;
+            teleporter.recipeIngredients = GetTeleportRecipeIngredientsList();
+            teleporter.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
+            teleporter.unlockingValue = 1e9f;
+            teleporter.groupCategory = DataConfig.GroupCategory.BaseBuilding;
 
-            // Index all of the existing group data
-            foreach (var groupData in ___groupsData)
-            {
-                groupDataById[groupData.id] = groupData;
-            }
-            bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
-
-            foreach(var constructible in assetBundleGroupDataConstructibles)
-            {
-                if (constructible.id == TELEPORT_ID)
-                {
-                    constructible.unitGenerationEnergy = -1.0f * configTeleporterPowerUsage.Value;
-                    constructible.recipeIngredients = teleportRecipeIngredients;
-                }
-                AddGroupDataToList(ref ___groupsData, constructible);
-            }
-
-            return true;
+            Framework.AddGroupDataToList(teleporter);
         }
 
-        private static void GenerateTeleportRecipeIngredientsList(List<GroupData> groupsData)
+        private List<GroupDataItem> GetTeleportRecipeIngredientsList()
         {
             RecipeList teleporterRecipe = JsonUtility.FromJson<RecipeList>(configListOfIngredientForTeleporter.Value);
-
-            foreach (string ingredient in teleporterRecipe.ingredientNames)
-            {
-                teleportRecipeIngredients.Add(GetGroupDataItem(groupsData, ingredient));
-            }
-        }
-
-        private static GroupDataItem GetGroupDataItem(List<GroupData> groupsData, string id)
-        {
-            return groupsData.Find((GroupData gData) => gData.id == id) as GroupDataItem;
-        }
-
-        private static void AddGroupDataToList(ref List<GroupData> groupsData, GroupData toAdd)
-        {
-                bool alreadyExists = groupDataById.ContainsKey(toAdd.id);
-                if (!alreadyExists)
-                {
-                    bepInExLogger.LogInfo($"Adding {toAdd.id} to group data.");
-                    groupsData.Add(toAdd);
-                    groupDataById[toAdd.id] = toAdd;
-                }            
+            return Framework.GroupDataItemListFromIds(teleporterRecipe.ingredientNames);
         }
 
         private void OnDestroy()
         {
-            assetBundleGroupDataConstructibles = null;
-            assetBundleGameObjects = null;
-            if (teleporterAssetBundle != null)
-            {
-                teleporterAssetBundle.Unload(true);
-            }            
-            teleporterAssetBundle = null;
             harmony.UnpatchSelf();
         }
     }
