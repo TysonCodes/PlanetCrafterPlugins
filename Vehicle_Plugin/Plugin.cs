@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using BepInEx;
-using BepInEx.Configuration;
 using BepInEx.Logging;
-using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
-using UnityEngine.UI;
 using PluginFramework;
+using System;
 
 namespace Vehicle_Plugin
 {
@@ -16,76 +15,50 @@ namespace Vehicle_Plugin
     [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, PluginFramework.PluginInfo.PLUGIN_VERSION)]    // In BepInEx 5.4.x this ia a minimum version, BepInEx 6.x has range semantics.
     public class Plugin : BaseUnityPlugin
     {
-        private const string NAME_GO_ENTER_TRIGGER = "TriggerEnter";
-        private static ManualLogSource bepInExLogger;
-        private AssetBundle vehicleAssetBundle;
-        private List<GameObject> assetBundleGameObjects = new List<GameObject>();
-        private static List<GroupDataConstructible> assetBundleGroupDataConstructibles = new List<GroupDataConstructible>();
-        private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>();
+        private const string ASSET_BUNDLE_FOLDER = "AssetBundles";
+        private const string ASSET_BUNDLE_NAME = "spacecraft";
+        private const string SPACECRAFT_PREFAB_NAME = "SpaceCraftPrefab";
+        private const string SPACECRAFT_ICON_NAME = "SpaceCraftIcon";
+        private static string SPACECRAFT_CONSTRUCTIBLE_ID = "SpaceCraft";
 
-        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+        private static ManualLogSource bepInExLogger;
 
         private void Awake()
         {
             bepInExLogger = Logger;
 
             // Load vehicle AssetBundle
-            vehicleAssetBundle = AssetBundle.LoadFromFile(Path.Combine(Paths.PluginPath, "spacecraft"));
-            assetBundleGameObjects = new List<GameObject>(vehicleAssetBundle.LoadAllAssets<GameObject>());
-            assetBundleGroupDataConstructibles = new List<GroupDataConstructible>(vehicleAssetBundle.LoadAllAssets<GroupDataConstructible>());
+            string assetBundleFolderPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ASSET_BUNDLE_FOLDER);
+            Framework.LoadAssetBundleFromFile(Path.Combine(assetBundleFolderPath, ASSET_BUNDLE_NAME));
 
-            // Modify the space craft to add scripts we need to add
-            GameObject spaceCraftGO = assetBundleGameObjects.Find((GameObject go) => go.name == "SpaceCraft");
-            if (spaceCraftGO != null)
-            {
-                spaceCraftGO.transform.Find(NAME_GO_ENTER_TRIGGER).gameObject.AddComponent<ActionEnterVehicle>();
-            }
-
-            harmony.PatchAll(typeof(Vehicle_Plugin.Plugin));
+            Framework.StaticGroupDataIndexed += OnStaticGroupDataIndexed;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(StaticDataHandler), "LoadStaticData")]
-        private static bool StaticDataHandler_LoadStaticData_Prefix(ref List<GroupData> ___groupsData)  
+        private void OnStaticGroupDataIndexed()
         {
-            // Index all of the existing group data
-            foreach (var groupData in ___groupsData)
-            {
-                groupDataById[groupData.id] = groupData;
-            }
-            bepInExLogger.LogInfo($"Created index of previous group data. Size = {groupDataById.Count}");
+            // Add new constructible for spacecraft.
+            GroupDataConstructible spaceCraft = Framework.CreateBuilding(SPACECRAFT_CONSTRUCTIBLE_ID);
+            spaceCraft.associatedGameObject = Framework.GameObjectByName[SPACECRAFT_PREFAB_NAME];
+            spaceCraft.icon = Framework.IconByName[SPACECRAFT_ICON_NAME];   
+            spaceCraft.recipeIngredients = new List<GroupDataItem>() {
+                Framework.ItemInfoById("RocketReactor"),
+                Framework.ItemInfoById("RocketReactor"),
+                Framework.ItemInfoById("Backpack5"),
+                Framework.ItemInfoById("OxygenTank4"),
+                Framework.ItemInfoById("Rod-uranium"),
+                Framework.ItemInfoById("Bioplastic1"),
+                Framework.ItemInfoById("Osmium"),
+                Framework.ItemInfoById("Alloy"),
+                Framework.ItemInfoById("Alloy")
+            };
+            spaceCraft.unlockingWorldUnit = DataConfig.WorldUnitType.Terraformation;
+            spaceCraft.unlockingValue = 500000f;
+            spaceCraft.inventorySize = 40;
+            spaceCraft.groupCategory = DataConfig.GroupCategory.Machines;
 
-            foreach(var constructible in assetBundleGroupDataConstructibles)
-            {
-                AddGroupDataToList(ref ___groupsData, constructible);
-            }
-
-            return true;
-        }
-
-        private static void AddGroupDataToList(ref List<GroupData> groupsData, GroupData toAdd)
-        {
-                bool alreadyExists = groupDataById.ContainsKey(toAdd.id);
-                if (!alreadyExists)
-                {
-                    bepInExLogger.LogInfo($"Adding {toAdd.id} to group data.");
-                    groupsData.Add(toAdd);
-                    groupDataById[toAdd.id] = toAdd;
-                }            
-        }
-
-        private void OnDestroy()
-        {
-            assetBundleGroupDataConstructibles = null;
-            assetBundleGameObjects = null;
-            if (vehicleAssetBundle != null)
-            {
-                vehicleAssetBundle.Unload(true);
-            }            
-            vehicleAssetBundle = null;
-            harmony.UnpatchSelf();
+            Framework.AddGroupDataToList(spaceCraft);
         }
     }
     

@@ -7,6 +7,7 @@ namespace SpaceCraft
     {
         // Settings
         public float colliderRadius = 2.5f;
+        public Collider exitVehicleCollider;
 
         private static PlayerMainController activePlayerController;
         private static PlayerMultitool playerMultitool;
@@ -17,7 +18,6 @@ namespace SpaceCraft
         private GameObject rootObject;
         private Collider vehiclePlayerExclusionCollider;
         private Collider openInventoryCollider;
-        private Collider exitVehicleCollider;
         private Transform vehicleLocationTransform;
         private Transform playerHeadLocationTransform;
         private Transform playerExitLocationTransform;
@@ -51,9 +51,6 @@ namespace SpaceCraft
             rootObject = gameObject.transform.parent.gameObject;
             vehiclePlayerExclusionCollider = rootObject.GetComponent<Collider>();
             openInventoryCollider = rootObject.transform.Find("TriggerOpenInventory").GetComponent<Collider>();
-            GameObject triggerExitGO = rootObject.transform.Find("TriggerExit").gameObject;
-            exitVehicleCollider = triggerExitGO.GetComponent<Collider>();
-            triggerExitGO.AddComponent<ActionExitVehicle>().enterVehicleAction = this;
             vehicleLocationTransform = rootObject.transform;
             playerHeadLocationTransform = rootObject.transform.Find("PlayerHeadLocation");
             playerExitLocationTransform = rootObject.transform.Find("PlayerExitLocation");
