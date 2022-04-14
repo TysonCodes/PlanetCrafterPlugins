@@ -7,11 +7,13 @@ using HarmonyLib;
 using SpaceCraft;
 using UnityEngine;
 using UnityEngine.UI;
+using PluginFramework;
 
 namespace Vehicle_Plugin
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
+    [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, PluginFramework.PluginInfo.PLUGIN_VERSION)]    // In BepInEx 5.4.x this ia a minimum version, BepInEx 6.x has range semantics.
     public class Plugin : BaseUnityPlugin
     {
         private const string NAME_GO_ENTER_TRIGGER = "TriggerEnter";
