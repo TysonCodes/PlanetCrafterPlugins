@@ -273,7 +273,7 @@ namespace RecipeExportImport_Plugin
         private static void AddBuilding(KeyValuePair<string, JToken> buildingToAdd)
         {
             bepInExLogger.LogInfo($"Adding new building '{buildingToAdd.Key}'");
-            GroupDataConstructible newBuilding = Framework.CreateBuilding(buildingToAdd.Key);
+            GroupDataConstructible newBuilding = Framework.CreateConstructible(buildingToAdd.Key);
             foreach (var setting in (JObject)buildingToAdd.Value)
             {
                 if (groupDataConstructibleDelegates.ContainsKey(setting.Key))

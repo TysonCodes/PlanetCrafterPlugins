@@ -61,10 +61,10 @@ namespace PluginFramework
             return item as GroupDataItem;
         }
 
-        public static GroupDataConstructible BuildingInfoById(string id)
+        public static GroupDataConstructible ConstructibleInfoById(string id)
         {
-            groupDataById.TryGetValue(id, out GroupData building);
-            return building as GroupDataConstructible;
+            groupDataById.TryGetValue(id, out GroupData constructible);
+            return constructible as GroupDataConstructible;
         }
 
         public static List<GroupDataItem> GroupDataItemListFromIds(List<string> groupIds)
@@ -116,12 +116,12 @@ namespace PluginFramework
             return newItem;
         }
 
-        public static GroupDataConstructible CreateBuilding(string id)
+        public static GroupDataConstructible CreateConstructible(string id)
         {
-            GroupDataConstructible newBuilding = ScriptableObject.CreateInstance<GroupDataConstructible>();
-            newBuilding.id = id;
-            newBuilding.recipeIngredients = new List<GroupDataItem>();
-            return newBuilding;
+            GroupDataConstructible newConstructible = ScriptableObject.CreateInstance<GroupDataConstructible>();
+            newConstructible.id = id;
+            newConstructible.recipeIngredients = new List<GroupDataItem>();
+            return newConstructible;
         }
 
         public static void AddGroupDataToList(GroupData toAdd)

@@ -39,7 +39,7 @@ namespace Vehicle_Plugin
         private void OnStaticGroupDataIndexed()
         {
             // Add new constructible for spacecraft.
-            GroupDataConstructible spaceCraft = Framework.CreateBuilding(SPACECRAFT_CONSTRUCTIBLE_ID);
+            GroupDataConstructible spaceCraft = Framework.CreateConstructible(SPACECRAFT_CONSTRUCTIBLE_ID);
             spaceCraft.associatedGameObject = Framework.GameObjectByName[SPACECRAFT_PREFAB_NAME];
             spaceCraft.icon = Framework.IconByName[SPACECRAFT_ICON_NAME];   
             spaceCraft.recipeIngredients = new List<GroupDataItem>() {

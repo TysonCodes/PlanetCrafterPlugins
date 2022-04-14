@@ -66,7 +66,7 @@ namespace Teleporters_Plugin
         private void OnStaticGroupDataIndexed()
         {
             // Add new constructible for teleporter.
-            GroupDataConstructible teleporter = Framework.CreateBuilding(TELEPORTER_BUILDING_ID);
+            GroupDataConstructible teleporter = Framework.CreateConstructible(TELEPORTER_BUILDING_ID);
             teleporter.associatedGameObject = Framework.GameObjectByName[TELEPORTER_PREFAB_NAME];
             teleporter.icon = Framework.IconByName[TELEPORTER_ICON_NAME];
             teleporter.unitGenerationEnergy = -1.0f * configTeleporterPowerUsage.Value;
