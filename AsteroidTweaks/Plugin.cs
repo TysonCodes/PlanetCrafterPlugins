@@ -31,7 +31,7 @@ namespace AsteroidTweaks_Plugin
                 "Note this will also affect how long resource spawns last.");
             configSpawnRandomMeteoEventHotkey = Config.Bind("General", "Spawn_Random_Meteo_Event_Hotkey", Key.F3, 
                 "Pick the key to use to spawn a random meteo event if no event is happening.");
-            configOnlyAsteroidEvents = Config.Bind("General", "Only_Aseroid_Events", false, "Limit random meteo events to those that have asteroids.");
+            configOnlyAsteroidEvents = Config.Bind("General", "Only_Asteroid_Events", false, "Limit random meteo events to those that have asteroids.");
 
             harmony.PatchAll(typeof(AsteroidTweaks_Plugin.Plugin));
 
