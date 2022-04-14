@@ -27,6 +27,18 @@ namespace PluginFramework
         public static IReadOnlyDictionary<string, GameObject> GameObjectById {get {return gameObjectById;}}
         public static IReadOnlyDictionary<string, Sprite> IconById {get {return iconById;}}
 
+        public static void LoadAssetBundlesFromFolder(string folderPath)
+        {
+            try
+            {
+                LoadAssetBundles(folderPath);
+            }
+            catch (Exception ex)
+            {
+                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to load asset bundles.");
+            }            
+        }
+
         public static GroupDataItem ItemInfoById (string id)
         {
             if (groupDataById.ContainsKey(id))
@@ -57,27 +69,17 @@ namespace PluginFramework
 
         private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
 
-        private const string ASSET_BUNDLE_FOLDER = "AssetBundles";
-
         private static List<GroupData> gameGroupData;
         private static Dictionary<string, GroupData> groupDataById = new Dictionary<string, GroupData>();
         private static Dictionary<string, TerraformStage> terraformStageById = new Dictionary<string, TerraformStage>();
         private static Dictionary<string, GameObject> gameObjectById = new Dictionary<string, GameObject>();
         private static Dictionary<string, Sprite> iconById = new Dictionary<string, Sprite>();
 
-        private List<AssetBundle> loadedAssetBundles = new List<AssetBundle>();
+        private static List<AssetBundle> loadedAssetBundles = new List<AssetBundle>();
 
         public Framework()
         {
             bepInExLogger = Logger;
-            try
-            {
-                LoadAssetBundles();
-            }
-            catch (Exception ex)
-            {
-                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to load asset bundles.");
-            }
         }
 
         private void Awake()
@@ -87,10 +89,9 @@ namespace PluginFramework
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        private void LoadAssetBundles()
+        private static void LoadAssetBundles(string folderPath)
         {
-            string assetBundleFolderPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ASSET_BUNDLE_FOLDER);
-            string[] assetBundlePaths = Directory.GetFiles(assetBundleFolderPath);
+            string[] assetBundlePaths = Directory.GetFiles(folderPath);
             foreach (string assetBundlePath in assetBundlePaths)
             {
                 bepInExLogger.LogInfo($"Loading AssetBundle: '{assetBundlePath}'");

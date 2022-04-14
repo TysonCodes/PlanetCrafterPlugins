@@ -23,6 +23,8 @@ namespace RecipeExportImport_Plugin
 
         private const string EXPORT_FILE_NAME = "CurrentRecipeList.json";
         private const string IMPORT_FILE_NAME = "RecipesToModifyAndAdd.jsonc";
+        private const string ASSET_BUNDLE_FOLDER = "AssetBundles";
+
         private static Dictionary<string, SetGroupDataValue> groupDataDelegates;
         private static Dictionary<string, SetGroupDataValue> groupDataItemDelegates;
         private static Dictionary<string, SetGroupDataValue> groupDataConstructibleDelegates;
@@ -214,6 +216,9 @@ namespace RecipeExportImport_Plugin
                     bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to export data.");
                 }
             }
+
+            string assetBundleFolderPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ASSET_BUNDLE_FOLDER);
+            Framework.LoadAssetBundlesFromFolder(assetBundleFolderPath);
 
             try
             {
