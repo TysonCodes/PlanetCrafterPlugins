@@ -157,6 +157,14 @@ namespace PluginFramework
 
         private void OnDestroy()
         {
+            foreach (var assetBundle in loadedAssetBundles)
+            {
+                if (assetBundle != null)
+                {
+                    assetBundle.Unload(true);
+                }
+            }
+            loadedAssetBundles = null;
             harmony.UnpatchSelf();
         }
     }
