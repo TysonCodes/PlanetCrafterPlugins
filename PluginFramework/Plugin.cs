@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using BepInEx;
@@ -10,12 +11,46 @@ using UnityEngine;
 
 namespace PluginFramework
 {
+    public delegate void Trigger();
+
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
     public class Framework : BaseUnityPlugin
     {
         #region Events
-        //public event 
+        public event Trigger GroupDataLoaded;
+        #endregion
+
+        #region PublicAPI
+        public static IReadOnlyDictionary<string, GroupData> GroupDataById {get {return groupDataById;}} 
+        public static IReadOnlyDictionary<string, TerraformStage> TerraformStageById {get {return terraformStageById;}}
+        public static IReadOnlyDictionary<string, GameObject> GameObjectById {get {return gameObjectById;}}
+        public static IReadOnlyDictionary<string, Sprite> IconById {get {return iconById;}}
+
+        public static GroupDataItem ItemInfoById (string id)
+        {
+            if (groupDataById.ContainsKey(id))
+            {
+                return groupDataById[id] as GroupDataItem;
+            }
+            return null;
+        }
+
+        public static void AddGroupDataToList(GroupData toAdd)
+        {
+            bool alreadyExists = groupDataById.ContainsKey(toAdd.id);
+            if (alreadyExists)
+            {
+                bepInExLogger.LogWarning($"Skipping duplicate group data with id '{toAdd.id}'");
+            }
+            else
+            {
+                bepInExLogger.LogInfo($"Adding {toAdd.id} to group data.");
+                gameGroupData.Add(toAdd);
+                groupDataById[toAdd.id] = toAdd;
+            }
+        }
+
         #endregion
 
         private static ManualLogSource bepInExLogger;
@@ -36,6 +71,7 @@ namespace PluginFramework
         {
             bepInExLogger = Logger;
             LoadAssetBundles();
+            GroupDataLoaded?.Invoke();
         }
 
         private void Awake()
