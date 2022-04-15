@@ -74,17 +74,17 @@ namespace OpenInteriorSpaces_Plugin
 
         public void DetectAdjacentPods()
         {
-            // Get pods in each global direction (ignore rotation).
-            podsByLocation.TryGetValue(position + (Vector3Int.right * POD_SPACING), out PodInfo nearbyPodRightGlobal);
-            podsByLocation.TryGetValue(position + (Vector3Int.left * POD_SPACING), out PodInfo nearbyPodLeftGlobal);
-            podsByLocation.TryGetValue(position + (Vector3Int.forward * POD_SPACING), out PodInfo nearbyPodFrontGlobal);
-            podsByLocation.TryGetValue(position + (Vector3Int.back * POD_SPACING), out PodInfo nearbyPodBackGlobal);
-
             // Update adjacency tracking
-            UpdateAdjacentPodsIfApplicable(PodDirection.PodRight, nearbyPodRightGlobal);
-            UpdateAdjacentPodsIfApplicable(PodDirection.PodLeft, nearbyPodLeftGlobal);
-            UpdateAdjacentPodsIfApplicable(PodDirection.PodFront, nearbyPodFrontGlobal);
-            UpdateAdjacentPodsIfApplicable(PodDirection.PodBack, nearbyPodBackGlobal);
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodRight, TryToGetNearbyPod(position + (Vector3Int.right * POD_SPACING)));
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodLeft, TryToGetNearbyPod(position + (Vector3Int.left * POD_SPACING)));
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodFront, TryToGetNearbyPod(position + (Vector3Int.forward * POD_SPACING)));
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodBack, TryToGetNearbyPod(position + (Vector3Int.back * POD_SPACING)));
+        }
+
+        private PodInfo TryToGetNearbyPod(Vector3Int locationToCheck, int tolerance = 5)
+        {
+            var result =  podsByLocation.FirstOrDefault(podAtLocation => (podAtLocation.Key - locationToCheck).magnitude < tolerance);
+            return result.Value;
         }
 
         private void UpdateAdjacentPodsIfApplicable(PodDirection globalDirection, PodInfo adjacentPod)
@@ -159,11 +159,18 @@ namespace OpenInteriorSpaces_Plugin
                 default:
                     break;
             }
-            if (!pillarInfoByLocation.TryGetValue(pillarLocation, out PillarInfo pillarInfo))
+            PillarInfo pillarInfo = TryToGetNearbyPillar(pillarLocation);
+            if (pillarInfo == null)
             {
                 pillarInfo = new PillarInfo(pillarLocation);
             }
             return pillarInfo;
+        }
+
+        private static PillarInfo TryToGetNearbyPillar(Vector3Int locationToCheck, int tolerance = 5)
+        {
+            var result = pillarInfoByLocation.FirstOrDefault(pillarAtLocation => (pillarAtLocation.Key - locationToCheck).magnitude < tolerance);
+            return result.Value;
         }
 
         public PillarInfo(Vector3Int position)
