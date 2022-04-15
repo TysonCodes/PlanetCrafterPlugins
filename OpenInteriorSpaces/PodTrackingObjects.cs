@@ -10,22 +10,6 @@ namespace OpenInteriorSpaces_Plugin
     public enum PodRotation {None, CW_Quarter, Half, CCW_Quarter};
     public enum PillarDirection { PillarFrontLeft, PillarFrontRight, PillarBackRight, PillarBackLeft};
 
-    public class PodInfoByXValue
-    {
-        public Dictionary<int, PodInfo> PodsByXValue = new Dictionary<int, PodInfo>();
-        public int z;
-
-        public PodInfoByXValue(int z)
-        {
-            this.z = z;
-        }
-    }
-
-    public class PodInfoByXValueByZValue
-    {
-        public Dictionary<int, PodInfoByXValue> PodsByZValue = new Dictionary<int, PodInfoByXValue>();
-    }
-
     public class PodInfo
     {
         public WorldObject associatedWorldObj;
@@ -35,7 +19,7 @@ namespace OpenInteriorSpaces_Plugin
         public Dictionary<PillarDirection, PillarInfo> pillarsByDirection = new Dictionary<PillarDirection, PillarInfo>();
 
         public static Dictionary<Panel, PodInfo> podInfoByPanel = new Dictionary<Panel, PodInfo>();
-        public static Dictionary<int, PodInfoByXValueByZValue> podsByYValue = new Dictionary<int, PodInfoByXValueByZValue>();
+        public static Dictionary<Vector3Int, PodInfo> podsByLocation = new Dictionary<Vector3Int, PodInfo>();
 
         private const float DETECT_DISTANCE = 2.0f;
         private const int POD_SPACING = 80;
@@ -50,8 +34,7 @@ namespace OpenInteriorSpaces_Plugin
             position = PositionFloatToInt(worldObject.GetPosition());
             rotation = CaculateRotation(worldObject.GetRotation().eulerAngles.y);
             Plugin.bepInExLogger.LogInfo($"Adding Pod. WorldObject: {worldObject.GetId()}, Location: {worldObject.GetPosition()}, Rotation: {rotation}");
-            AddPodToSpatialIndex(position, this);
-            podsByYValue[position.y].PodsByZValue[position.z].PodsByXValue[position.x] = this;
+            podsByLocation[position] = this;
             var panels = associatedGameObj.GetComponentsInChildren<Panel>();
             for (int i = 0; i < panels.Length; i++)
             {
@@ -65,21 +48,6 @@ namespace OpenInteriorSpaces_Plugin
         private Vector3Int PositionFloatToInt(Vector3 position)
         {
             return new Vector3Int(Mathf.RoundToInt(position.x * 10.0f), Mathf.RoundToInt(position.y * 10.0f), Mathf.RoundToInt(position.z * 10.0f));
-        }
-
-        private void AddPodToSpatialIndex(Vector3Int position, PodInfo podInfo)
-        {
-            if (!podsByYValue.TryGetValue(position.y, out PodInfoByXValueByZValue podsForCurrentY))
-            {
-                podsForCurrentY = new PodInfoByXValueByZValue();
-                podsByYValue[position.y] = podsForCurrentY;
-            }
-            if (!podsForCurrentY.PodsByZValue.TryGetValue(position.z, out PodInfoByXValue podsForCurrentYZ))
-            {
-                podsForCurrentYZ = new PodInfoByXValue(position.z);
-                podsForCurrentY.PodsByZValue[position.z] = podsForCurrentYZ;
-            }
-            podsForCurrentYZ.PodsByXValue[position.x] = this;
         }
 
         private PodRotation CaculateRotation(float y)
@@ -104,24 +72,16 @@ namespace OpenInteriorSpaces_Plugin
             // Panels are in Local +Z/-Z/+X/-X order (Front, Back, Right, Left - somewhat arbitrarily)
             // Rotation is around Y with +90 meaning the local +Z now faces World +X and local +X now faces World -Z
 
-            // Only pods at the same height matter.
-            PodInfoByXValueByZValue podsAtSameHeight = podsByYValue[position.y];
+            // Get pods in each direction.
+            podsByLocation.TryGetValue(position + (Vector3Int.right * POD_SPACING), out PodInfo nearbyPodRightGlobal);
+            podsByLocation.TryGetValue(position + (Vector3Int.left * POD_SPACING), out PodInfo nearbyPodLeftGlobal);
+            podsByLocation.TryGetValue(position + (Vector3Int.forward * POD_SPACING), out PodInfo nearbyPodFrontGlobal);
+            podsByLocation.TryGetValue(position + (Vector3Int.back * POD_SPACING), out PodInfo nearbyPodBackGlobal);
 
-            // Find any pod global +X/-X from this pod
-            var podsAtSameZValue = podsAtSameHeight.PodsByZValue[position.z];
-            podsAtSameZValue.PodsByXValue.TryGetValue(position.x + POD_SPACING, out PodInfo nearbyPodPlusXGlobal);
-            podsAtSameZValue.PodsByXValue.TryGetValue(position.x - POD_SPACING, out PodInfo nearbyPodMinusXGlobal);
-
-            // Find any pod global +Z/-Z from this pod
-            podsAtSameHeight.PodsByZValue.TryGetValue(position.z + POD_SPACING, out PodInfoByXValue podsAtPlusZGlobal);
-            podsAtSameHeight.PodsByZValue.TryGetValue(position.z - POD_SPACING, out PodInfoByXValue podsAtMinusZGlobal);
-            PodInfo nearbyPodPlusZGlobal = AttemptToGetPodAtXLocation(podsAtPlusZGlobal, position.x);
-            PodInfo nearbyPodMinusZGlobal = AttemptToGetPodAtXLocation(podsAtMinusZGlobal, position.x);
-
-            UpdateAdjacentPodsIfApplicable(PodDirection.PodRight, nearbyPodPlusXGlobal);
-            UpdateAdjacentPodsIfApplicable(PodDirection.PodLeft, nearbyPodMinusXGlobal);
-            UpdateAdjacentPodsIfApplicable(PodDirection.PodFront, nearbyPodPlusZGlobal);
-            UpdateAdjacentPodsIfApplicable(PodDirection.PodBack, nearbyPodMinusZGlobal);
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodRight, nearbyPodRightGlobal);
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodLeft, nearbyPodLeftGlobal);
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodFront, nearbyPodFrontGlobal);
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodBack, nearbyPodBackGlobal);
         }
 
         private void UpdateAdjacentPodsIfApplicable(PodDirection globalDirection, PodInfo adjacentPod)
@@ -152,16 +112,6 @@ namespace OpenInteriorSpaces_Plugin
         {
             int newPodDirection = ((int)startDirection + (int)rotationAmount) % 4;
             return (PodDirection)newPodDirection;
-        }
-
-        private PodInfo AttemptToGetPodAtXLocation(PodInfoByXValue podsAtSpecificZ, int x)
-        {
-            if (podsAtSpecificZ != null)
-            {
-                podsAtSpecificZ.PodsByXValue.TryGetValue(x, out PodInfo nearbyPod);
-                return nearbyPod;                
-            }
-            return null;
         }
 
         public void AddAdjacentPod(PodDirection direction, PodInfo podInfo)
