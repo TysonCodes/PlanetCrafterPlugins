@@ -14,11 +14,10 @@ namespace OpenInteriorSpaces_Plugin
     {
         public WorldObject associatedWorldObj;
         public GameObject associatedGameObj;
-        public Dictionary<PodDirection, Panel> panelByDirection = new Dictionary<PodDirection, Panel>();
-        public Dictionary<PodDirection, PodInfo> podByDirection = new Dictionary<PodDirection, PodInfo>();
-        public Dictionary<PillarDirection, PillarInfo> pillarsByDirection = new Dictionary<PillarDirection, PillarInfo>();
+        public Dictionary<PodDirection, Panel> panelByGlobalDirection = new Dictionary<PodDirection, Panel>();
+        public Dictionary<PodDirection, PodInfo> podByGlobalDirection = new Dictionary<PodDirection, PodInfo>();
+        public Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
 
-        public static Dictionary<Panel, PodInfo> podInfoByPanel = new Dictionary<Panel, PodInfo>();
         public static Dictionary<Vector3Int, PodInfo> podsByLocation = new Dictionary<Vector3Int, PodInfo>();
 
         private const float DETECT_DISTANCE = 2.0f;
@@ -35,12 +34,7 @@ namespace OpenInteriorSpaces_Plugin
             rotation = CaculateRotation(worldObject.GetRotation().eulerAngles.y);
             Plugin.bepInExLogger.LogInfo($"Adding Pod. WorldObject: {worldObject.GetId()}, Location: {worldObject.GetPosition()}, Rotation: {rotation}");
             podsByLocation[position] = this;
-            var panels = associatedGameObj.GetComponentsInChildren<Panel>();
-            for (int i = 0; i < panels.Length; i++)
-            {
-                panelByDirection[(PodDirection)i] = panels[i];
-                PodInfo.podInfoByPanel[panels[i]] = this;
-            }
+            DeterminePanelsForGlobalRotation();
             GeneratePillarInfo();
             DetectAdjacentPods();
         }
@@ -67,11 +61,19 @@ namespace OpenInteriorSpaces_Plugin
             return PodRotation.None;
         }
 
-        public void DetectAdjacentPods()
+        private void DeterminePanelsForGlobalRotation()
         {
             // Panels are in Local +Z/-Z/+X/-X order (Front, Back, Right, Left - based on local coordinates)
             // Rotation is around Y with +90 meaning the local +Z now faces World +X and local +X now faces World -Z
+            Panel[] panels = associatedGameObj.GetComponentsInChildren<Panel>();
+            panelByGlobalDirection[CalculatePodDirectionAfterRotation(PodDirection.PodFront)] = panels[0];
+            panelByGlobalDirection[CalculatePodDirectionAfterRotation(PodDirection.PodBack)] = panels[1];
+            panelByGlobalDirection[CalculatePodDirectionAfterRotation(PodDirection.PodRight)] = panels[2];
+            panelByGlobalDirection[CalculatePodDirectionAfterRotation(PodDirection.PodLeft)] = panels[3];            
+        }
 
+        public void DetectAdjacentPods()
+        {
             // Get pods in each global direction (ignore rotation).
             podsByLocation.TryGetValue(position + (Vector3Int.right * POD_SPACING), out PodInfo nearbyPodRightGlobal);
             podsByLocation.TryGetValue(position + (Vector3Int.left * POD_SPACING), out PodInfo nearbyPodLeftGlobal);
@@ -87,20 +89,15 @@ namespace OpenInteriorSpaces_Plugin
 
         private void UpdateAdjacentPodsIfApplicable(PodDirection globalDirection, PodInfo adjacentPod)
         {
+            // TODO: Does direction even matter?
             if (adjacentPod != null)
             {
                 // Update this pod to point to the adjacent pod
-                PodDirection directionToAdjacentPod = CalculatePodDirectionAfterRotation(globalDirection);
-                AddAdjacentPod(directionToAdjacentPod, adjacentPod);
+                AddAdjacentPod(globalDirection, adjacentPod);
 
                 // Update the adjacent pod to point back to this pod
                 PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(globalDirection, PodRotation.Half);
-                PodDirection directionFromAdjacentPodToThisPod = adjacentPod.CalculatePodDirectionAfterRotation(flippedGlobalDirection);
-                adjacentPod.AddAdjacentPod(directionFromAdjacentPodToThisPod, this);
-
-                // Update pillars
-                UpdatePillars();
-                adjacentPod.UpdatePillars();
+                adjacentPod.AddAdjacentPod(flippedGlobalDirection, this);
             }
         }
 
@@ -117,93 +114,87 @@ namespace OpenInteriorSpaces_Plugin
 
         public void AddAdjacentPod(PodDirection direction, PodInfo podInfo)
         {
-            Plugin.bepInExLogger.LogInfo($"Adding adjacent pod from '{this.associatedWorldObj.GetId()}' to '{podInfo.associatedWorldObj.GetId()}' in direction '{direction}'.");
-            podByDirection[direction] = podInfo;
-            // TODO: This can be cleaner.
-            // TODO: How do I figure out the missing interior pillars once I have one or more of them? The problem is the links aren't there when we check and 
-            // don't fully establish until return AddAdjacent pod. Maybe this update should happen after somehow?
-            switch (direction)
-            {
-                case PodDirection.PodFront:
-                    pillarsByDirection[PillarDirection.PillarFrontLeft].borderingPods.Add(podInfo);
-                    pillarsByDirection[PillarDirection.PillarFrontRight].borderingPods.Add(podInfo);
-                    break;
-                case PodDirection.PodRight:
-                    pillarsByDirection[PillarDirection.PillarBackRight].borderingPods.Add(podInfo);
-                    pillarsByDirection[PillarDirection.PillarFrontRight].borderingPods.Add(podInfo);
-                    break;
-                case PodDirection.PodBack:
-                    pillarsByDirection[PillarDirection.PillarBackLeft].borderingPods.Add(podInfo);
-                    pillarsByDirection[PillarDirection.PillarBackRight].borderingPods.Add(podInfo);
-                    break;
-                case PodDirection.PodLeft:
-                    pillarsByDirection[PillarDirection.PillarFrontLeft].borderingPods.Add(podInfo);
-                    pillarsByDirection[PillarDirection.PillarBackLeft].borderingPods.Add(podInfo);
-                    break;
-                default:
-                    break;
-            }
+            Plugin.bepInExLogger.LogInfo($"Adding adjacent pod from '{this.associatedWorldObj.GetId()}' to '{podInfo.associatedWorldObj.GetId()}' in global direction '{direction}'.");
+            podByGlobalDirection[direction] = podInfo;
         }
 
         public void GeneratePillarInfo()
         {
-            pillarsByDirection[PillarDirection.PillarFrontLeft] = new PillarInfo(this, PillarDirection.PillarFrontLeft, PodDirection.PodLeft, PodDirection.PodFront);
-            pillarsByDirection[PillarDirection.PillarFrontRight] = new PillarInfo(this, PillarDirection.PillarFrontRight, PodDirection.PodFront, PodDirection.PodRight);
-            pillarsByDirection[PillarDirection.PillarBackRight] = new PillarInfo(this, PillarDirection.PillarBackRight, PodDirection.PodRight, PodDirection.PodBack);
-            pillarsByDirection[PillarDirection.PillarBackLeft] = new PillarInfo(this, PillarDirection.PillarBackLeft, PodDirection.PodBack, PodDirection.PodLeft);
-        }
-
-        public void UpdatePillars()
-        {
-            pillarsByDirection[PillarDirection.PillarFrontLeft].CheckForOppositePod();
-            pillarsByDirection[PillarDirection.PillarFrontRight].CheckForOppositePod();
-            pillarsByDirection[PillarDirection.PillarBackLeft].CheckForOppositePod();
-            pillarsByDirection[PillarDirection.PillarBackRight].CheckForOppositePod();
+            foreach (PillarDirection direction in Enum.GetValues(typeof(PillarDirection)))
+            {
+                pillarsByGlobalDirection[direction] = PillarInfo.GetPillarAtLocation(position, direction);
+                pillarsByGlobalDirection[direction].AddBorderingPod(this, direction);
+            }
         }
     }
 
     public class PillarInfo
     {
         public bool IsInterior {get; private set;} = false;
-        public PodInfo interiorPod;
-        public List<PodInfo> borderingPods = new List<PodInfo>();
-        public PodInfo oppositePod;
-        private PillarDirection direction;
 
-        public PillarInfo(PodInfo interiorPod, PillarDirection direction, PodDirection oneBorder, PodDirection otherBorder)
+        private const int PILLAR_OFFSET_FROM_POD_CENTER = 40;
+
+        private static Dictionary<Vector3Int, PillarInfo> pillarInfoByLocation = new Dictionary<Vector3Int, PillarInfo>();
+
+        private Vector3Int position;
+        private Dictionary<PillarDirection, PodInfo> borderingPodsByDirectionFromPod = new Dictionary<PillarDirection, PodInfo>();
+
+        public static PillarInfo GetPillarAtLocation(Vector3Int podLocation, PillarDirection globalDirection)
         {
-            this.interiorPod = interiorPod;
-            this.direction = direction;
-            // TODO: I can figure out these directions from the enum.
-            if (interiorPod.podByDirection.ContainsKey(oneBorder))
+            Vector3Int pillarLocation = podLocation;
+            switch (globalDirection)
             {
-                borderingPods.Add(interiorPod.podByDirection[oneBorder]);
+                case PillarDirection.PillarFrontLeft:
+                    pillarLocation += new Vector3Int(-PILLAR_OFFSET_FROM_POD_CENTER, 0, PILLAR_OFFSET_FROM_POD_CENTER);
+                    break;
+                case PillarDirection.PillarFrontRight:
+                    pillarLocation += new Vector3Int(PILLAR_OFFSET_FROM_POD_CENTER, 0, PILLAR_OFFSET_FROM_POD_CENTER);
+                    break;
+                case PillarDirection.PillarBackLeft:
+                    pillarLocation += new Vector3Int(-PILLAR_OFFSET_FROM_POD_CENTER, 0, -PILLAR_OFFSET_FROM_POD_CENTER);
+                    break;
+                case PillarDirection.PillarBackRight:
+                    pillarLocation += new Vector3Int(PILLAR_OFFSET_FROM_POD_CENTER, 0, -PILLAR_OFFSET_FROM_POD_CENTER);
+                    break;
+                default:
+                    break;
             }
-            if (interiorPod.podByDirection.ContainsKey(oneBorder))
+            if (!pillarInfoByLocation.TryGetValue(pillarLocation, out PillarInfo pillarInfo))
             {
-                borderingPods.Add(interiorPod.podByDirection[oneBorder]);
+                pillarInfo = new PillarInfo(pillarLocation);
             }
-            CheckForOppositePod();
+            return pillarInfo;
         }
 
-        public void CheckForOppositePod()
+        public PillarInfo(Vector3Int position)
         {
-            if (IsInterior) {return;}   // For now we can't undo making something interior.
-            if (borderingPods.Count == 2)
+            this.position = position;
+            pillarInfoByLocation[position] = this;
+        }
+
+        public void AddBorderingPod(PodInfo podToAdd, PillarDirection globalDirectionFromPodToPillar)
+        {
+            borderingPodsByDirectionFromPod[globalDirectionFromPodToPillar] = podToAdd;
+            RecalculateInterior();
+        }
+
+        public void RemoveBorderingPod(PodInfo podToRemove)
+        {
+            if (borderingPodsByDirectionFromPod.ContainsValue(podToRemove))
             {
-                var firstPodBorderingPods = borderingPods[0].podByDirection;
-                var secondPodBorderingPods = borderingPods[1].podByDirection;
-                foreach (var pod in firstPodBorderingPods)
-                {
-                    if (pod.Value != interiorPod && secondPodBorderingPods.ContainsValue(pod.Value))
-                    {
-                        oppositePod = pod.Value;
-                        IsInterior = true;
-                        Plugin.bepInExLogger.LogInfo($"Found an interior pillar. Direction: '{direction}', pod: '{interiorPod.associatedWorldObj.GetId()}'");
-                        borderingPods[0].UpdatePillars();
-                        borderingPods[1].UpdatePillars();
-                    }
-                }
+                borderingPodsByDirectionFromPod.Remove(borderingPodsByDirectionFromPod.First(directionalPod => directionalPod.Value == podToRemove).Key);
+                RecalculateInterior();
+            }
+        }
+
+        private void RecalculateInterior()
+        {
+            IsInterior = (borderingPodsByDirectionFromPod.Count == 4);
+            // TODO: Need to have this emit an event to update graphics
+            if (IsInterior)
+            {
+                // Temporary for debugging.
+                Plugin.bepInExLogger.LogInfo($"Found an interior pillar at location: '{position}'.");
             }
         }
     }
