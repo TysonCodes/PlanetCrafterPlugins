@@ -43,6 +43,6 @@
 
   <Target Name="CopyDLLs" AfterTargets="Build">
     <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)/Lathrey-$(Product)" />
-    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="C:\Users\Tyson\Documents\Projects\PlanetCrafterEditing\InjectedAssets\Assets\SpaceCraft" />
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="C:\Users\Tyson\Documents\Projects\PlanetCrafterEditing\NewInjectedAssets\Assets\SpaceCraft" />
   </Target>
 </Project>

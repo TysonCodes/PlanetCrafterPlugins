@@ -49,6 +49,6 @@
 
   <Target Name="CopyDLLs" AfterTargets="Build">
     <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="$(PluginsFolder)/Lathrey-Teleporters" />
-    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="C:\Users\Tyson\Documents\Projects\PlanetCrafterEditing\SceneExport\FullEA\Planet Crafter\Assets\Portal" />
+    <Copy SourceFiles="$(TargetDir)$(AssemblyName).dll" DestinationFolder="C:\Users\Tyson\Documents\Projects\PlanetCrafterEditing\NewInjectedAssets\Assets\Portal" />
   </Target>
 </Project>
