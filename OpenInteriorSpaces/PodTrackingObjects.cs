@@ -69,15 +69,16 @@ namespace OpenInteriorSpaces_Plugin
 
         public void DetectAdjacentPods()
         {
-            // Panels are in Local +Z/-Z/+X/-X order (Front, Back, Right, Left - somewhat arbitrarily)
+            // Panels are in Local +Z/-Z/+X/-X order (Front, Back, Right, Left - based on local coordinates)
             // Rotation is around Y with +90 meaning the local +Z now faces World +X and local +X now faces World -Z
 
-            // Get pods in each direction.
+            // Get pods in each global direction (ignore rotation).
             podsByLocation.TryGetValue(position + (Vector3Int.right * POD_SPACING), out PodInfo nearbyPodRightGlobal);
             podsByLocation.TryGetValue(position + (Vector3Int.left * POD_SPACING), out PodInfo nearbyPodLeftGlobal);
             podsByLocation.TryGetValue(position + (Vector3Int.forward * POD_SPACING), out PodInfo nearbyPodFrontGlobal);
             podsByLocation.TryGetValue(position + (Vector3Int.back * POD_SPACING), out PodInfo nearbyPodBackGlobal);
 
+            // Update adjacency tracking
             UpdateAdjacentPodsIfApplicable(PodDirection.PodRight, nearbyPodRightGlobal);
             UpdateAdjacentPodsIfApplicable(PodDirection.PodLeft, nearbyPodLeftGlobal);
             UpdateAdjacentPodsIfApplicable(PodDirection.PodFront, nearbyPodFrontGlobal);
