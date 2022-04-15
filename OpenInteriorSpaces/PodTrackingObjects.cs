@@ -72,7 +72,7 @@ namespace OpenInteriorSpaces_Plugin
             panelByGlobalDirection[CalculatePodDirectionAfterRotation(PodDirection.PodLeft)] = panels[3];            
         }
 
-        public void DetectAdjacentPods()
+        private void DetectAdjacentPods()
         {
             // Update adjacency tracking
             UpdateAdjacentPodsIfApplicable(PodDirection.PodRight, TryToGetNearbyPod(position + (Vector3Int.right * POD_SPACING)));
@@ -89,7 +89,7 @@ namespace OpenInteriorSpaces_Plugin
 
         private void UpdateAdjacentPodsIfApplicable(PodDirection globalDirection, PodInfo adjacentPod)
         {
-            // TODO: Does direction even matter?
+            // TODO: Does direction even matter? Do we even need to track this if visibility is only based on pillars?
             if (adjacentPod != null)
             {
                 // Update this pod to point to the adjacent pod
@@ -112,19 +112,52 @@ namespace OpenInteriorSpaces_Plugin
             return (PodDirection)newPodDirection;
         }
 
-        public void AddAdjacentPod(PodDirection direction, PodInfo podInfo)
+        private void AddAdjacentPod(PodDirection direction, PodInfo podInfo)
         {
             Plugin.bepInExLogger.LogInfo($"Adding adjacent pod from '{this.associatedWorldObj.GetId()}' to '{podInfo.associatedWorldObj.GetId()}' in global direction '{direction}'.");
             podByGlobalDirection[direction] = podInfo;
         }
 
-        public void GeneratePillarInfo()
+        private void GeneratePillarInfo()
         {
             foreach (PillarDirection direction in Enum.GetValues(typeof(PillarDirection)))
             {
                 pillarsByGlobalDirection[direction] = PillarInfo.GetPillarAtLocation(position, direction);
                 pillarsByGlobalDirection[direction].AddBorderingPod(this, direction);
             }
+        }
+    
+        public void PillarBecameInterior(PillarDirection direction)
+        {
+            switch (direction)
+            {
+                case PillarDirection.PillarFrontLeft:
+                    UpdateWall(PodDirection.PodLeft);
+                    UpdateWall(PodDirection.PodFront);
+                    break;
+                case PillarDirection.PillarFrontRight:
+                    UpdateWall(PodDirection.PodFront);
+                    UpdateWall(PodDirection.PodRight);
+                    break;
+                case PillarDirection.PillarBackLeft:
+                    UpdateWall(PodDirection.PodBack);
+                    UpdateWall(PodDirection.PodLeft);
+                    break;
+                case PillarDirection.PillarBackRight:
+                    UpdateWall(PodDirection.PodRight);
+                    UpdateWall(PodDirection.PodBack);
+                    break;
+                default:
+                    break;
+            }
+
+            // TODO: Think about removing versus adding. Will this be automatically handled by the normal game code?
+        }
+
+        private void UpdateWall(PodDirection podDirection)
+        {
+            // For now we just hide it for testing purposes.
+            panelByGlobalDirection[podDirection].ChangePanel(DataConfig.BuildPanelSubType.WallNull);
         }
     }
 
@@ -198,10 +231,15 @@ namespace OpenInteriorSpaces_Plugin
         {
             IsInterior = (borderingPodsByDirectionFromPod.Count == 4);
             // TODO: Need to have this emit an event to update graphics
+            // TODO: When a pillar changes each bordering pod needs to check the 2 panels on either side of the pillar and update them to either be half or no walls.
             if (IsInterior)
             {
                 // Temporary for debugging.
                 Plugin.bepInExLogger.LogInfo($"Found an interior pillar at location: '{position}'.");
+                foreach (var borderPod in borderingPodsByDirectionFromPod)
+                {
+                    borderPod.Value.PillarBecameInterior(borderPod.Key);
+                }
             }
         }
     }

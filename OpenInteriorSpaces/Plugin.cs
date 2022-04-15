@@ -41,6 +41,7 @@ namespace OpenInteriorSpaces_Plugin
         [HarmonyPatch(typeof(WorldObjectsHandler), "DestroyWorldObject")]
         private static bool WorldObjectsHandler_DestroyWorldObject_Prefix(WorldObject _worldObject)
         {
+            // TODO: Handle removing the pods.
             return true;
         }
 
