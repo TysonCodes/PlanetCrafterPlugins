@@ -46,15 +46,15 @@ namespace OpenInteriorSpaces_Plugin
 
         private PodRotation CaculateRotation(float y)
         {
-            if (Mathf.DeltaAngle(y, 90.0f) < 0.1f)
+            if (Mathf.Abs(Mathf.DeltaAngle(y, 90.0f)) < 0.1f)
             {
                 return PodRotation.CW_Quarter;
             }
-            if (Mathf.DeltaAngle(y, 180.0f) < 0.1f)
+            if (Mathf.Abs(Mathf.DeltaAngle(y, 180.0f)) < 0.1f)
             {
                 return PodRotation.Half;
             }
-            if (Mathf.DeltaAngle(y, 270.0f) < 0.1f)
+            if (Mathf.Abs(Mathf.DeltaAngle(y, -90.0f)) < 0.1f)
             {
                 return PodRotation.CCW_Quarter;
             }
