@@ -32,9 +32,10 @@ namespace OpenInteriorSpaces_Plugin
         [HarmonyPatch(typeof(WorldObjectsHandler), "InstantiateWorldObject")]
         private static void WorldObjectsHandler_InstantiateWorldObject_Postfix(WorldObject _worldObject, bool _fromDb, ref GameObject __result)
         {
-            // Only do this for Pods not in the world map.
-            if (!_fromDb && _worldObject.GetGroup().GetId() == "pod")
+            // Only do this for Pods.
+            if (_worldObject.GetGroup().GetId() == "pod")
             {
+                bepInExLogger.LogInfo($"Adding Pod. WorldObject: {_worldObject.GetId()}, Location:{_worldObject.GetPosition()}");
                 PodInfo newPod = new PodInfo();
                 newPod.associatedWorldObj = _worldObject;
                 newPod.associatedGameObj = __result;
