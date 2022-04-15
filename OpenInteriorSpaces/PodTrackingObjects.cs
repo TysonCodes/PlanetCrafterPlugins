@@ -136,6 +136,10 @@ namespace OpenInteriorSpaces_Plugin
                 PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(globalDirection, PodRotation.Half);
                 PodDirection directionFromAdjacentPodToThisPod = adjacentPod.CalculatePodDirectionAfterRotation(flippedGlobalDirection);
                 adjacentPod.AddAdjacentPod(directionFromAdjacentPodToThisPod, this);
+
+                // Update pillars
+                UpdatePillars();
+                adjacentPod.UpdatePillars();
             }
         }
 
@@ -172,26 +176,18 @@ namespace OpenInteriorSpaces_Plugin
                 case PodDirection.PodFront:
                     pillarsByDirection[PillarDirection.PillarFrontLeft].borderingPods.Add(podInfo);
                     pillarsByDirection[PillarDirection.PillarFrontRight].borderingPods.Add(podInfo);
-                    pillarsByDirection[PillarDirection.PillarFrontLeft].CheckForOppositePod();
-                    pillarsByDirection[PillarDirection.PillarFrontRight].CheckForOppositePod();
                     break;
                 case PodDirection.PodRight:
                     pillarsByDirection[PillarDirection.PillarBackRight].borderingPods.Add(podInfo);
                     pillarsByDirection[PillarDirection.PillarFrontRight].borderingPods.Add(podInfo);
-                    pillarsByDirection[PillarDirection.PillarBackRight].CheckForOppositePod();
-                    pillarsByDirection[PillarDirection.PillarFrontRight].CheckForOppositePod();
                     break;
                 case PodDirection.PodBack:
                     pillarsByDirection[PillarDirection.PillarBackLeft].borderingPods.Add(podInfo);
                     pillarsByDirection[PillarDirection.PillarBackRight].borderingPods.Add(podInfo);
-                    pillarsByDirection[PillarDirection.PillarBackLeft].CheckForOppositePod();
-                    pillarsByDirection[PillarDirection.PillarBackRight].CheckForOppositePod();
                     break;
                 case PodDirection.PodLeft:
                     pillarsByDirection[PillarDirection.PillarFrontLeft].borderingPods.Add(podInfo);
                     pillarsByDirection[PillarDirection.PillarBackLeft].borderingPods.Add(podInfo);
-                    pillarsByDirection[PillarDirection.PillarFrontLeft].CheckForOppositePod();
-                    pillarsByDirection[PillarDirection.PillarBackLeft].CheckForOppositePod();
                     break;
                 default:
                     break;
@@ -204,6 +200,14 @@ namespace OpenInteriorSpaces_Plugin
             pillarsByDirection[PillarDirection.PillarFrontRight] = new PillarInfo(this, PillarDirection.PillarFrontRight, PodDirection.PodFront, PodDirection.PodRight);
             pillarsByDirection[PillarDirection.PillarBackRight] = new PillarInfo(this, PillarDirection.PillarBackRight, PodDirection.PodRight, PodDirection.PodBack);
             pillarsByDirection[PillarDirection.PillarBackLeft] = new PillarInfo(this, PillarDirection.PillarBackLeft, PodDirection.PodBack, PodDirection.PodLeft);
+        }
+
+        public void UpdatePillars()
+        {
+            pillarsByDirection[PillarDirection.PillarFrontLeft].CheckForOppositePod();
+            pillarsByDirection[PillarDirection.PillarFrontRight].CheckForOppositePod();
+            pillarsByDirection[PillarDirection.PillarBackLeft].CheckForOppositePod();
+            pillarsByDirection[PillarDirection.PillarBackRight].CheckForOppositePod();
         }
     }
 
@@ -233,6 +237,7 @@ namespace OpenInteriorSpaces_Plugin
 
         public void CheckForOppositePod()
         {
+            if (IsInterior) {return;}   // For now we can't undo making something interior.
             if (borderingPods.Count == 2)
             {
                 var firstPodBorderingPods = borderingPods[0].podByDirection;
@@ -244,6 +249,8 @@ namespace OpenInteriorSpaces_Plugin
                         oppositePod = pod.Value;
                         IsInterior = true;
                         Plugin.bepInExLogger.LogInfo($"Found an interior pillar. Direction: '{direction}', pod: '{interiorPod.associatedWorldObj.GetId()}'");
+                        borderingPods[0].UpdatePillars();
+                        borderingPods[1].UpdatePillars();
                     }
                 }
             }
