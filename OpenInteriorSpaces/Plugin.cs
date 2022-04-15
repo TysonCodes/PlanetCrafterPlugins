@@ -17,8 +17,6 @@ namespace OpenInteriorSpaces_Plugin
 
         public static ManualLogSource bepInExLogger;
 
-        private Dictionary<WorldObject, PodInfo> podsByWorldObject = new Dictionary<WorldObject, PodInfo>();
-
         private void Awake()
         {
             bepInExLogger = Logger;
@@ -35,18 +33,7 @@ namespace OpenInteriorSpaces_Plugin
             // Only do this for Pods.
             if (_worldObject.GetGroup().GetId() == "pod")
             {
-                bepInExLogger.LogInfo($"Adding Pod. WorldObject: {_worldObject.GetId()}, Location:{_worldObject.GetPosition()}");
-                PodInfo newPod = new PodInfo();
-                newPod.associatedWorldObj = _worldObject;
-                newPod.associatedGameObj = __result;
-                var panels = newPod.associatedGameObj.GetComponentsInChildren<Panel>();
-                for (int i = 0; i < panels.Length; i++)
-                {
-                    newPod.panelByDirection[(PodDirection)i] = panels[i];
-                    PodInfo.podInfoByPanel[panels[i]] = newPod;
-                }
-                newPod.DetectAdjacentPods();
-                newPod.GeneratePillarInfo();
+                PodInfo newPod = new PodInfo(_worldObject, __result);
             }
         }
 
