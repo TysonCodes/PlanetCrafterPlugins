@@ -123,15 +123,15 @@ namespace OpenInteriorSpaces_Plugin
 
             // Interior wall panel with right wall
             interiorRoomWallPanelRightGO = Instantiate(interiorRoomWallPanelGO);
-            interiorRoomWallPanelLeftGO.name = "Wall_Interior_Right";
+            interiorRoomWallPanelRightGO.name = "Wall_Interior_Right";
 
             // RightWall
             GameObject rightWallGO = new GameObject("RightWall");
-            leftWallGO.transform.SetParent(interiorRoomWallPanelRightGO.transform, false);
-            leftWallGO.transform.localPosition = Vector3.zero;
-            leftWallGO.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
-            leftWallGO.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f / 3.0f);
-            Instantiate(commonHalfWallGO, leftWallGO.transform).name = commonHalfWallGO.name;
+            rightWallGO.transform.SetParent(interiorRoomWallPanelRightGO.transform, false);
+            rightWallGO.transform.localPosition = Vector3.zero;
+            rightWallGO.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
+            rightWallGO.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f / 3.0f);
+            Instantiate(commonHalfWallGO, rightWallGO.transform).name = commonHalfWallGO.name;
         }
 
         private void AddPanelsToPanelsResources()
