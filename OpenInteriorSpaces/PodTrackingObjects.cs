@@ -48,7 +48,7 @@ namespace OpenInteriorSpaces_Plugin
             associatedWorldObj = worldObject;
             associatedGameObj = gameObject;
             position = PositionFloatToInt(worldObject.GetPosition());
-            rotation = CaculateRotation(worldObject.GetRotation().eulerAngles.y);
+            rotation = CalculateRotation(worldObject.GetRotation().eulerAngles.y);
             Plugin.bepInExLogger.LogInfo($"Adding Pod. WorldObject: {worldObject.GetId()}, Location: {worldObject.GetPosition()}, Rotation: {rotation}");
             podsByLocation[position] = this;
             podsByWorldId[associatedWorldObj.GetId()] = this;
@@ -66,6 +66,14 @@ namespace OpenInteriorSpaces_Plugin
             pillarsByGlobalDirection[PillarDirection.PillarFrontRight].RemoveBorderingPod(this);
             pillarsByGlobalDirection[PillarDirection.PillarBackLeft].RemoveBorderingPod(this);
             pillarsByGlobalDirection[PillarDirection.PillarBackRight].RemoveBorderingPod(this);
+            foreach(var adjacentPod in podByGlobalDirection)
+            {
+                if (adjacentPod.Value != null)
+                {
+                    PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(adjacentPod.Key, PodRotation.Half);
+                    adjacentPod.Value.podByGlobalDirection.Remove(flippedGlobalDirection);
+                }
+            }
         }
 
         private Vector3Int PositionFloatToInt(Vector3 position)
@@ -73,7 +81,7 @@ namespace OpenInteriorSpaces_Plugin
             return new Vector3Int(Mathf.RoundToInt(position.x * 10.0f), Mathf.RoundToInt(position.y * 10.0f), Mathf.RoundToInt(position.z * 10.0f));
         }
 
-        private PodRotation CaculateRotation(float y)
+        private PodRotation CalculateRotation(float y)
         {
             if (Mathf.Abs(Mathf.DeltaAngle(y, 90.0f)) < 0.1f)
             {
@@ -211,8 +219,15 @@ namespace OpenInteriorSpaces_Plugin
             }
             else if (podDirectionPanel.subPanelType >= Plugin.WALL_INTERIOR_NONE_SUBTYPE)
             {
-                // Reset to plain wall if it was an interior wall but no longer is.
-                podDirectionPanel.ChangePanel(DataConfig.BuildPanelSubType.WallPlain);
+                // Reset if it was an interior wall but no longer is.
+                if (podByGlobalDirection.ContainsKey(podDirection))
+                {
+                    podDirectionPanel.ChangePanel(DataConfig.BuildPanelSubType.WallCorridor);
+                }
+                else
+                {
+                    podDirectionPanel.ChangePanel(DataConfig.BuildPanelSubType.WallPlain);
+                }
             }
         }
     }
