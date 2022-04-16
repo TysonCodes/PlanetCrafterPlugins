@@ -50,7 +50,7 @@ namespace OpenInteriorSpaces_Plugin
             associatedGameObj = gameObject;
             position = PositionFloatToInt(worldObject.GetPosition());
             rotation = CalculateRotation(worldObject.GetRotation().eulerAngles.y);
-            Plugin.bepInExLogger.LogInfo($"Adding Pod. WorldObject: {worldObject.GetId()}, Location: {worldObject.GetPosition()}, Rotation: {rotation}");
+            Plugin.bepInExLogger.LogDebug($"Adding Pod. WorldObject: {worldObject.GetId()}, Location: {worldObject.GetPosition()}, Rotation: {rotation}");
             podsByLocation[position] = this;
             podsByWorldId[associatedWorldObj.GetId()] = this;
             DeterminePanelsForGlobalDirections();
@@ -170,7 +170,7 @@ namespace OpenInteriorSpaces_Plugin
 
         private void AddAdjacentPod(PodDirection direction, PodInfo podInfo)
         {
-            Plugin.bepInExLogger.LogInfo($"Adding adjacent pod from '{this.associatedWorldObj.GetId()}' to '{podInfo.associatedWorldObj.GetId()}' in global direction '{direction}'.");
+            Plugin.bepInExLogger.LogDebug($"Adding adjacent pod from '{this.associatedWorldObj.GetId()}' to '{podInfo.associatedWorldObj.GetId()}' in global direction '{direction}'.");
             podByGlobalDirection[direction] = podInfo;
         }
 
@@ -203,7 +203,7 @@ namespace OpenInteriorSpaces_Plugin
             GameObject leftPillar = pillarStructureByGlobalDirection[leftPillarDirection];
             GameObject rightPillar = pillarStructureByGlobalDirection[rightPillarDirection];
             Panel podDirectionPanel = panelByGlobalDirection[podDirection];
-            Plugin.bepInExLogger.LogInfo($"UpdateWall {podDirection} for pod: {associatedWorldObj.GetId()}");
+            Plugin.bepInExLogger.LogDebug($"UpdateWall {podDirection} for pod: {associatedWorldObj.GetId()}");
             if (leftPillarInside)
             {
                 leftPillar.SetActive(false);
@@ -212,7 +212,7 @@ namespace OpenInteriorSpaces_Plugin
                 {
                     interiorWalls.Add(podDirection);
                 }
-                Plugin.bepInExLogger.LogInfo($"\tHiding pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
+                Plugin.bepInExLogger.LogDebug($"\tHiding pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
                 if (rightPillarInside)
                 {
                     podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_NONE_SUBTYPE);
@@ -230,7 +230,7 @@ namespace OpenInteriorSpaces_Plugin
                 {
                     interiorWalls.Add(podDirection);
                 }
-                Plugin.bepInExLogger.LogInfo($"\tHiding pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
+                Plugin.bepInExLogger.LogDebug($"\tHiding pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
                 podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_LEFT_SUBTYPE);
             }
             else if (interiorWalls.Contains(podDirection))
@@ -239,7 +239,7 @@ namespace OpenInteriorSpaces_Plugin
                 leftPillar.SetActive(true);
                 rightPillar.SetActive(true);
                 interiorWalls.Remove(podDirection);
-                Plugin.bepInExLogger.LogInfo($"\tShowing pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
+                Plugin.bepInExLogger.LogDebug($"\tShowing pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
                 if (podByGlobalDirection.ContainsKey(podDirection))
                 {
                     podDirectionPanel.ChangePanel(DataConfig.BuildPanelSubType.WallCorridor);
@@ -324,7 +324,7 @@ namespace OpenInteriorSpaces_Plugin
 
             if (newInterior != IsInterior)
             {
-                Plugin.bepInExLogger.LogInfo($"Pillar at location: '{position}' changed to IsInterior = {newInterior}.");
+                Plugin.bepInExLogger.LogDebug($"Pillar at location: '{position}' changed to IsInterior = {newInterior}.");
                 IsInterior = newInterior;
                 
                 foreach (var borderPod in borderingPodsByDirectionFromPod)
