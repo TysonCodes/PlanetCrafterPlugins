@@ -12,11 +12,11 @@ namespace OpenInteriorSpaces_Plugin
 
     public class PodInfo
     {
-        public WorldObject associatedWorldObj;
-        public GameObject associatedGameObj;
-        public Dictionary<PodDirection, Panel> panelByGlobalDirection = new Dictionary<PodDirection, Panel>();
-        public Dictionary<PodDirection, PodInfo> podByGlobalDirection = new Dictionary<PodDirection, PodInfo>();
-        public Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
+        private WorldObject associatedWorldObj;
+        private GameObject associatedGameObj;
+        private Dictionary<PodDirection, Panel> panelByGlobalDirection = new Dictionary<PodDirection, Panel>();
+        private Dictionary<PodDirection, PodInfo> podByGlobalDirection = new Dictionary<PodDirection, PodInfo>();
+        private Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
         
         public static Dictionary<Vector3Int, PodInfo> podsByLocation = new Dictionary<Vector3Int, PodInfo>();
         public static Dictionary<int, PodInfo> podsByWorldId = new Dictionary<int, PodInfo>();
@@ -75,6 +75,12 @@ namespace OpenInteriorSpaces_Plugin
             pillarsByGlobalDirection[PillarDirection.PillarFrontRight].RemoveBorderingPod(this);
             pillarsByGlobalDirection[PillarDirection.PillarBackLeft].RemoveBorderingPod(this);
             pillarsByGlobalDirection[PillarDirection.PillarBackRight].RemoveBorderingPod(this);
+        }
+
+        public static void Reset()
+        {
+            podsByLocation = new Dictionary<Vector3Int, PodInfo>();
+            podsByWorldId = new Dictionary<int, PodInfo>();
         }
 
         private Vector3Int PositionFloatToInt(Vector3 position)
@@ -289,6 +295,11 @@ namespace OpenInteriorSpaces_Plugin
                 pillarInfo = new PillarInfo(pillarLocation);
             }
             return pillarInfo;
+        }
+
+        public static void Reset()
+        {
+            pillarInfoByLocation = new Dictionary<Vector3Int, PillarInfo>();
         }
 
         private static PillarInfo TryToGetNearbyPillar(Vector3Int locationToCheck, int tolerance = 5)

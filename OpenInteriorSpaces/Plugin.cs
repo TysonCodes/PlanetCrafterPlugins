@@ -25,8 +25,6 @@ namespace OpenInteriorSpaces_Plugin
         public const DataConfig.BuildPanelSubType WALL_INTERIOR_LEFT_SUBTYPE = (DataConfig.BuildPanelSubType) (FIRST_CUSTOM_SUBTYPE + 1);
         public const DataConfig.BuildPanelSubType WALL_INTERIOR_RIGHT_SUBTYPE = (DataConfig.BuildPanelSubType) (FIRST_CUSTOM_SUBTYPE + 2);
 
-        private static bool newPanelsCreated = false;
-
         private const string GAME_OBJECT_PATH_TO_FLOOR = "Container/4BlocRoom/Common/Floor/P_Floor_Tinny_02_LP";
         private const string GAME_OBJECT_PATH_TO_HALF_WALL = "Container/4BlocRoom/Common/P_Wall_Half_01";
 
@@ -72,12 +70,11 @@ namespace OpenInteriorSpaces_Plugin
 
         private void OnGameStateLoadingStarted()
         {
-            if (!newPanelsCreated)
-            {
-                CreatePanels();
-                AddPanelsToPanelsResources();
-                newPanelsCreated = true;
-            }
+            // Reset the PodInfo and PillarInfo static values.
+            PodInfo.Reset();
+            PillarInfo.Reset();
+            CreatePanels();
+            AddPanelsToPanelsResources();
         }
 
         private void CreatePanels()
