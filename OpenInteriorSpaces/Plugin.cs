@@ -92,23 +92,44 @@ namespace OpenInteriorSpaces_Plugin
             commonHalfWallGO.transform.localScale = Vector3.one;
             commonHalfWallGO.name = "HalfWall";
 
-            // Interior wall panel without left/right walls
-            interiorRoomWallPanelGO = new GameObject("Wall_Interior_None");
+            // Base object common to all walls.
+            GameObject baseGO = new GameObject("Base-Interior-Wall");
 
             // Floor
             GameObject floorGO = new GameObject("Floor");
-            floorGO.transform.SetParent(interiorRoomWallPanelGO.transform, false);
-            floorGO.transform.localPosition = new Vector3(-1.0f, 0.0f, 1.0f);
+            floorGO.transform.SetParent(baseGO.transform, false);
+            floorGO.transform.localPosition = new Vector3(-1.0f, 0.0f, 0.0f);
             floorGO.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
-            floorGO.transform.localScale = new Vector3(4.0f / 3.0f, 1.0f, 0.5f);
+            floorGO.transform.localScale = new Vector3(1.0f, 1.0f, 0.5f);
             Instantiate(commonFloorPanelGO, floorGO.transform).name = commonFloorPanelGO.name;
 
             // Ceiling
-            GameObject ceilingGO = Instantiate(floorGO, interiorRoomWallPanelGO.transform);
+            GameObject ceilingGO = Instantiate(floorGO, baseGO.transform);
             ceilingGO.name = "Ceiling";
-            ceilingGO.transform.localPosition = new Vector3(0.0f, 4.0f, 1.0f);
+            ceilingGO.transform.localPosition = new Vector3(0.0f, 4.0f, 0.0f);
             ceilingGO.transform.localEulerAngles = new Vector3(180.0f, 90.0f, 0.0f);
+            ceilingGO.transform.localScale = new Vector3(1.0f, 1.0f, 0.5f);
 
+            // Interior wall panel without left/right wall
+            interiorRoomWallPanelGO = Instantiate(baseGO);
+            interiorRoomWallPanelGO.name = "Wall_Interior_None";
+
+            // Center floor
+            GameObject floorInCenterGO = new GameObject("FloorInCenter");
+            floorInCenterGO.transform.SetParent(interiorRoomWallPanelGO.transform, false);
+            floorInCenterGO.transform.localPosition = Vector3.zero;
+            floorInCenterGO.transform.localEulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
+            floorInCenterGO.transform.localScale = new Vector3(0.169f, 1.0f, 0.5f);
+            Instantiate(commonFloorPanelGO, floorInCenterGO.transform).name = commonFloorPanelGO.name;
+
+            // Center ceiling
+            GameObject ceilingInCenterGO = new GameObject("FloorInCenter");
+            ceilingInCenterGO.transform.SetParent(interiorRoomWallPanelGO.transform, false);
+            ceilingInCenterGO.transform.localPosition = new Vector3(-1.0f, 4.0f, 0.0f);
+            ceilingInCenterGO.transform.localEulerAngles = new Vector3(180.0f, -90.0f, 0.0f);
+            ceilingInCenterGO.transform.localScale = new Vector3(0.169f, 1.0f, 0.5f);
+            Instantiate(commonFloorPanelGO, ceilingInCenterGO.transform).name = commonFloorPanelGO.name;
+            
             // Interior wall panel with left wall
             interiorRoomWallPanelLeftGO = Instantiate(interiorRoomWallPanelGO);
             interiorRoomWallPanelLeftGO.name = "Wall_Interior_Left";
@@ -120,9 +141,9 @@ namespace OpenInteriorSpaces_Plugin
             leftWallGO.transform.localEulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
             leftWallGO.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f / 3.0f);
             Instantiate(commonHalfWallGO, leftWallGO.transform).name = commonHalfWallGO.name;
-
+            
             // Interior wall panel with right wall
-            interiorRoomWallPanelRightGO = Instantiate(interiorRoomWallPanelGO);
+            interiorRoomWallPanelRightGO = Instantiate(baseGO);
             interiorRoomWallPanelRightGO.name = "Wall_Interior_Right";
 
             // RightWall
