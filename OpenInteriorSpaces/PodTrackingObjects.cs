@@ -17,14 +17,16 @@ namespace OpenInteriorSpaces_Plugin
         public Dictionary<PodDirection, Panel> panelByGlobalDirection = new Dictionary<PodDirection, Panel>();
         public Dictionary<PodDirection, PodInfo> podByGlobalDirection = new Dictionary<PodDirection, PodInfo>();
         public Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
-
+        
         public static Dictionary<Vector3Int, PodInfo> podsByLocation = new Dictionary<Vector3Int, PodInfo>();
 
         private const float DETECT_DISTANCE = 2.0f;
         private const int POD_SPACING = 80;
+        private const string GAME_OBJECT_PATH_TO_STRUCTURE = "Container/Structure";
 
         private Vector3Int position;
         private PodRotation rotation;
+        private Dictionary<PillarDirection, GameObject> pillarStructureByGlobalDirection = new Dictionary<PillarDirection, GameObject>();
 
         public PodInfo(WorldObject worldObject, GameObject gameObject)
         {
@@ -34,7 +36,8 @@ namespace OpenInteriorSpaces_Plugin
             rotation = CaculateRotation(worldObject.GetRotation().eulerAngles.y);
             Plugin.bepInExLogger.LogInfo($"Adding Pod. WorldObject: {worldObject.GetId()}, Location: {worldObject.GetPosition()}, Rotation: {rotation}");
             podsByLocation[position] = this;
-            DeterminePanelsForGlobalRotation();
+            DeterminePanelsForGlobalDirections();
+            DeterminePillarStructuresForGlobalDirections();
             GeneratePillarInfo();
             DetectAdjacentPods();
         }
@@ -61,7 +64,7 @@ namespace OpenInteriorSpaces_Plugin
             return PodRotation.None;
         }
 
-        private void DeterminePanelsForGlobalRotation()
+        private void DeterminePanelsForGlobalDirections()
         {
             // Panels are in Local +Z/-Z/+X/-X order (Front, Back, Right, Left - based on local coordinates)
             // Rotation is around Y with +90 meaning the local +Z now faces World +X and local +X now faces World -Z
@@ -70,6 +73,19 @@ namespace OpenInteriorSpaces_Plugin
             panelByGlobalDirection[CalculatePodDirectionAfterRotation(PodDirection.PodBack)] = panels[1];
             panelByGlobalDirection[CalculatePodDirectionAfterRotation(PodDirection.PodRight)] = panels[2];
             panelByGlobalDirection[CalculatePodDirectionAfterRotation(PodDirection.PodLeft)] = panels[3];            
+        }
+
+        private void DeterminePillarStructuresForGlobalDirections()
+        {
+            // Pillars are called 'Wall_Angle_03' inside 'Structure' inside 'Container' in the Pod gameobject.
+            // They have capsule colliders on them.
+            // They are ordered locally - BackRight, BackLeft, FrontRight, FrontLeft
+            Transform structureGameObject = associatedGameObj.transform.Find(GAME_OBJECT_PATH_TO_STRUCTURE);
+            CapsuleCollider[] pillarStructures = structureGameObject.GetComponentsInChildren<CapsuleCollider>();
+            pillarStructureByGlobalDirection[CalculatePillarDirectionAfterRotation(PillarDirection.PillarBackRight)] = pillarStructures[0].gameObject;
+            pillarStructureByGlobalDirection[CalculatePillarDirectionAfterRotation(PillarDirection.PillarBackLeft)] = pillarStructures[1].gameObject;
+            pillarStructureByGlobalDirection[CalculatePillarDirectionAfterRotation(PillarDirection.PillarFrontRight)] = pillarStructures[2].gameObject;
+            pillarStructureByGlobalDirection[CalculatePillarDirectionAfterRotation(PillarDirection.PillarFrontLeft)] = pillarStructures[3].gameObject;
         }
 
         private void DetectAdjacentPods()
@@ -112,6 +128,12 @@ namespace OpenInteriorSpaces_Plugin
             return (PodDirection)newPodDirection;
         }
 
+        private PillarDirection CalculatePillarDirectionAfterRotation(PillarDirection startDirection)
+        {
+            int newPillarDirection = ((int)startDirection + (int)rotation) % 4;
+            return (PillarDirection)newPillarDirection;
+        }
+
         private void AddAdjacentPod(PodDirection direction, PodInfo podInfo)
         {
             Plugin.bepInExLogger.LogInfo($"Adding adjacent pod from '{this.associatedWorldObj.GetId()}' to '{podInfo.associatedWorldObj.GetId()}' in global direction '{direction}'.");
@@ -129,6 +151,7 @@ namespace OpenInteriorSpaces_Plugin
     
         public void PillarBecameInterior(PillarDirection direction)
         {
+            pillarStructureByGlobalDirection[direction].SetActive(false);
             switch (direction)
             {
                 case PillarDirection.PillarFrontLeft:
