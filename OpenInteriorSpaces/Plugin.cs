@@ -104,6 +104,18 @@ namespace OpenInteriorSpaces_Plugin
             floorGO.transform.localScale = new Vector3(1.0f, 1.0f, 0.5f);
             Instantiate(commonFloorPanelGO, floorGO.transform).name = commonFloorPanelGO.name;
 
+            // Floor Surface (for building)
+            GameObject floorSurfaceGO = new GameObject("FloorSurface");
+            floorSurfaceGO.transform.SetParent(floorGO.transform, false);
+            floorSurfaceGO.transform.localPosition = new Vector3(2.5f, 0.0f, 1.0f);
+            floorSurfaceGO.transform.localEulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
+            floorSurfaceGO.transform.localScale = new Vector3(2.0f, 1.0f, 1.0f);
+            BoxCollider floorSurfaceCollider = floorSurfaceGO.AddComponent<BoxCollider>();
+            floorSurfaceCollider.isTrigger = true;
+            floorSurfaceCollider.center = new Vector3(0.0f, -0.048232f, 0.0f);
+            floorSurfaceCollider.size = new Vector3(1.0f, 0.1681314f, 7.0f);
+            floorSurfaceGO.AddComponent<HomemadeTag>().homemadeTag = DataConfig.HomemadeTag.SurfaceFloor;
+
             // Ceiling
             GameObject ceilingGO = Instantiate(floorGO, baseGO.transform);
             ceilingGO.name = "Ceiling";
