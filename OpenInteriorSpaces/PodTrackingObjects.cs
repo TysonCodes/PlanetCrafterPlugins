@@ -42,6 +42,7 @@ namespace OpenInteriorSpaces_Plugin
         private Vector3Int position;
         private PodRotation rotation;
         private Dictionary<PillarDirection, GameObject> pillarStructureByGlobalDirection = new Dictionary<PillarDirection, GameObject>();
+        private List<PodDirection> interiorWalls = new List<PodDirection>();
 
         public PodInfo(WorldObject worldObject, GameObject gameObject)
         {
@@ -62,10 +63,6 @@ namespace OpenInteriorSpaces_Plugin
         {
             podsByLocation.Remove(position);
             podsByWorldId.Remove(associatedWorldObj.GetId());
-            pillarsByGlobalDirection[PillarDirection.PillarFrontLeft].RemoveBorderingPod(this);
-            pillarsByGlobalDirection[PillarDirection.PillarFrontRight].RemoveBorderingPod(this);
-            pillarsByGlobalDirection[PillarDirection.PillarBackLeft].RemoveBorderingPod(this);
-            pillarsByGlobalDirection[PillarDirection.PillarBackRight].RemoveBorderingPod(this);
             foreach(var adjacentPod in podByGlobalDirection)
             {
                 if (adjacentPod.Value != null)
@@ -74,6 +71,10 @@ namespace OpenInteriorSpaces_Plugin
                     adjacentPod.Value.podByGlobalDirection.Remove(flippedGlobalDirection);
                 }
             }
+            pillarsByGlobalDirection[PillarDirection.PillarFrontLeft].RemoveBorderingPod(this);
+            pillarsByGlobalDirection[PillarDirection.PillarFrontRight].RemoveBorderingPod(this);
+            pillarsByGlobalDirection[PillarDirection.PillarBackLeft].RemoveBorderingPod(this);
+            pillarsByGlobalDirection[PillarDirection.PillarBackRight].RemoveBorderingPod(this);
         }
 
         private Vector3Int PositionFloatToInt(Vector3 position)
@@ -139,7 +140,6 @@ namespace OpenInteriorSpaces_Plugin
 
         private void UpdateAdjacentPodsIfApplicable(PodDirection globalDirection, PodInfo adjacentPod)
         {
-            // TODO: Does direction even matter? Do we even need to track this if visibility is only based on pillars?
             if (adjacentPod != null)
             {
                 // Update this pod to point to the adjacent pod
@@ -188,7 +188,6 @@ namespace OpenInteriorSpaces_Plugin
     
         public void PillarInteriorChanged(PillarDirection direction, bool isInside)
         {
-            pillarStructureByGlobalDirection[direction].SetActive(!isInside);
             UpdateWall(PodDirection.PodLeft);
             UpdateWall(PodDirection.PodFront);
             UpdateWall(PodDirection.PodRight);
@@ -197,13 +196,23 @@ namespace OpenInteriorSpaces_Plugin
 
         private void UpdateWall(PodDirection podDirection)
         {
-            PillarDirection leftPillar = leftPillarByDirection[podDirection];
-            PillarDirection rightPillar = rightPillarByDirection[podDirection];
-            bool leftPillarInside = pillarsByGlobalDirection[leftPillar].IsInterior;
-            bool rightPillarInside = pillarsByGlobalDirection[rightPillar].IsInterior;
+            PillarDirection leftPillarDirection = leftPillarByDirection[podDirection];
+            PillarDirection rightPillarDirection = rightPillarByDirection[podDirection];
+            bool leftPillarInside = pillarsByGlobalDirection[leftPillarDirection].IsInterior;
+            bool rightPillarInside = pillarsByGlobalDirection[rightPillarDirection].IsInterior;
+            GameObject leftPillar = pillarStructureByGlobalDirection[leftPillarDirection];
+            GameObject rightPillar = pillarStructureByGlobalDirection[rightPillarDirection];
             Panel podDirectionPanel = panelByGlobalDirection[podDirection];
+            Plugin.bepInExLogger.LogInfo($"UpdateWall {podDirection} for pod: {associatedWorldObj.GetId()}");
             if (leftPillarInside)
             {
+                leftPillar.SetActive(false);
+                rightPillar.SetActive(false);
+                if (!interiorWalls.Contains(podDirection))
+                {
+                    interiorWalls.Add(podDirection);
+                }
+                Plugin.bepInExLogger.LogInfo($"\tHiding pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
                 if (rightPillarInside)
                 {
                     podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_NONE_SUBTYPE);
@@ -215,11 +224,22 @@ namespace OpenInteriorSpaces_Plugin
             }
             else if (rightPillarInside)
             {
+                leftPillar.SetActive(false);
+                rightPillar.SetActive(false);
+                if (!interiorWalls.Contains(podDirection))
+                {
+                    interiorWalls.Add(podDirection);
+                }
+                Plugin.bepInExLogger.LogInfo($"\tHiding pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
                 podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_LEFT_SUBTYPE);
             }
-            else if (podDirectionPanel.subPanelType >= Plugin.WALL_INTERIOR_NONE_SUBTYPE)
+            else if (interiorWalls.Contains(podDirection))
             {
                 // Reset if it was an interior wall but no longer is.
+                leftPillar.SetActive(true);
+                rightPillar.SetActive(true);
+                interiorWalls.Remove(podDirection);
+                Plugin.bepInExLogger.LogInfo($"\tShowing pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
                 if (podByGlobalDirection.ContainsKey(podDirection))
                 {
                     podDirectionPanel.ChangePanel(DataConfig.BuildPanelSubType.WallCorridor);

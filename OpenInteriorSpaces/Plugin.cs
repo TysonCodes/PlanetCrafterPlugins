@@ -20,9 +20,10 @@ namespace OpenInteriorSpaces_Plugin
 
         public static ManualLogSource bepInExLogger;
 
-        public const DataConfig.BuildPanelSubType WALL_INTERIOR_NONE_SUBTYPE = (DataConfig.BuildPanelSubType) 100;
-        public const DataConfig.BuildPanelSubType WALL_INTERIOR_LEFT_SUBTYPE = (DataConfig.BuildPanelSubType) 101;
-        public const DataConfig.BuildPanelSubType WALL_INTERIOR_RIGHT_SUBTYPE = (DataConfig.BuildPanelSubType) 102;
+        public const DataConfig.BuildPanelSubType FIRST_CUSTOM_SUBTYPE = (DataConfig.BuildPanelSubType) 100;
+        public const DataConfig.BuildPanelSubType WALL_INTERIOR_NONE_SUBTYPE = FIRST_CUSTOM_SUBTYPE;
+        public const DataConfig.BuildPanelSubType WALL_INTERIOR_LEFT_SUBTYPE = (DataConfig.BuildPanelSubType) (FIRST_CUSTOM_SUBTYPE + 1);
+        public const DataConfig.BuildPanelSubType WALL_INTERIOR_RIGHT_SUBTYPE = (DataConfig.BuildPanelSubType) (FIRST_CUSTOM_SUBTYPE + 2);
 
         private static bool newPanelsCreated = false;
 
