@@ -59,7 +59,13 @@ namespace OpenInteriorSpaces_Plugin
         [HarmonyPatch(typeof(WorldObjectsHandler), "DestroyWorldObject")]
         private static bool WorldObjectsHandler_DestroyWorldObject_Prefix(WorldObject _worldObject)
         {
-            // TODO: Handle removing the pods.
+            if (_worldObject.GetGroup().GetId() == "pod")
+            {
+                if (PodInfo.podsByWorldId.TryGetValue(_worldObject.GetId(), out PodInfo podToDelete))
+                {
+                    podToDelete.Remove();
+                }
+            }
             return true;
         }
 

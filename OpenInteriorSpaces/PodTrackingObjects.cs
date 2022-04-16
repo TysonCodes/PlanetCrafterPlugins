@@ -19,6 +19,7 @@ namespace OpenInteriorSpaces_Plugin
         public Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
         
         public static Dictionary<Vector3Int, PodInfo> podsByLocation = new Dictionary<Vector3Int, PodInfo>();
+        public static Dictionary<int, PodInfo> podsByWorldId = new Dictionary<int, PodInfo>();
 
         private const float DETECT_DISTANCE = 2.0f;
         private const int POD_SPACING = 80;
@@ -50,10 +51,21 @@ namespace OpenInteriorSpaces_Plugin
             rotation = CaculateRotation(worldObject.GetRotation().eulerAngles.y);
             Plugin.bepInExLogger.LogInfo($"Adding Pod. WorldObject: {worldObject.GetId()}, Location: {worldObject.GetPosition()}, Rotation: {rotation}");
             podsByLocation[position] = this;
+            podsByWorldId[associatedWorldObj.GetId()] = this;
             DeterminePanelsForGlobalDirections();
             DeterminePillarStructuresForGlobalDirections();
             GeneratePillarInfo();
             DetectAdjacentPods();
+        }
+
+        public void Remove()
+        {
+            podsByLocation.Remove(position);
+            podsByWorldId.Remove(associatedWorldObj.GetId());
+            pillarsByGlobalDirection[PillarDirection.PillarFrontLeft].RemoveBorderingPod(this);
+            pillarsByGlobalDirection[PillarDirection.PillarFrontRight].RemoveBorderingPod(this);
+            pillarsByGlobalDirection[PillarDirection.PillarBackLeft].RemoveBorderingPod(this);
+            pillarsByGlobalDirection[PillarDirection.PillarBackRight].RemoveBorderingPod(this);
         }
 
         private Vector3Int PositionFloatToInt(Vector3 position)
