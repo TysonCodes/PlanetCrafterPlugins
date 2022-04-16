@@ -129,17 +129,17 @@ namespace RecipeExportImport_Plugin
         {
             Assembly executingAsm = Assembly.GetExecutingAssembly();
             var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies();
-            Logger.LogInfo("Executing Assembly: " + executingAsm.GetName());
-            Logger.LogInfo("References:");
+            Logger.LogDebug("Executing Assembly: " + executingAsm.GetName());
+            Logger.LogDebug("References:");
             foreach (var asm in executingAsm.GetReferencedAssemblies())
             {
-                Logger.LogInfo("\t" + asm.Name);
+                Logger.LogDebug("\t" + asm.Name);
                 Assembly actualAsm = loadedAssemblies.FirstOrDefault(assembly => assembly.GetName().Name == asm.Name);
                 if (actualAsm != null)
                 {
                     foreach (var subAsm in actualAsm.GetReferencedAssemblies())
                     {
-                        Logger.LogInfo("\t\t" + subAsm.Name);
+                        Logger.LogDebug("\t\t" + subAsm.Name);
                     }
                 }
             }
