@@ -24,6 +24,20 @@ namespace OpenInteriorSpaces_Plugin
         private const int POD_SPACING = 80;
         private const string GAME_OBJECT_PATH_TO_STRUCTURE = "Container/Structure";
 
+        private static readonly Dictionary<PodDirection, PillarDirection> leftPillarByDirection = new Dictionary<PodDirection, PillarDirection>() {
+            {PodDirection.PodFront, PillarDirection.PillarFrontLeft},
+            {PodDirection.PodRight, PillarDirection.PillarFrontRight},
+            {PodDirection.PodBack, PillarDirection.PillarBackRight},
+            {PodDirection.PodLeft, PillarDirection.PillarBackLeft}
+        };
+
+        private static readonly Dictionary<PodDirection, PillarDirection> rightPillarByDirection = new Dictionary<PodDirection, PillarDirection>() {
+            {PodDirection.PodFront, PillarDirection.PillarFrontRight},
+            {PodDirection.PodRight, PillarDirection.PillarBackRight},
+            {PodDirection.PodBack, PillarDirection.PillarBackLeft},
+            {PodDirection.PodLeft, PillarDirection.PillarFrontLeft}
+        };
+
         private Vector3Int position;
         private PodRotation rotation;
         private Dictionary<PillarDirection, GameObject> pillarStructureByGlobalDirection = new Dictionary<PillarDirection, GameObject>();
@@ -145,42 +159,49 @@ namespace OpenInteriorSpaces_Plugin
             foreach (PillarDirection direction in Enum.GetValues(typeof(PillarDirection)))
             {
                 pillarsByGlobalDirection[direction] = PillarInfo.GetPillarAtLocation(position, direction);
+            }
+            foreach (PillarDirection direction in Enum.GetValues(typeof(PillarDirection)))
+            {
                 pillarsByGlobalDirection[direction].AddBorderingPod(this, direction);
             }
         }
     
-        public void PillarBecameInterior(PillarDirection direction)
+        public void PillarInteriorChanged(PillarDirection direction, bool isInside)
         {
-            pillarStructureByGlobalDirection[direction].SetActive(false);
-            switch (direction)
-            {
-                case PillarDirection.PillarFrontLeft:
-                    UpdateWall(PodDirection.PodLeft);
-                    UpdateWall(PodDirection.PodFront);
-                    break;
-                case PillarDirection.PillarFrontRight:
-                    UpdateWall(PodDirection.PodFront);
-                    UpdateWall(PodDirection.PodRight);
-                    break;
-                case PillarDirection.PillarBackLeft:
-                    UpdateWall(PodDirection.PodBack);
-                    UpdateWall(PodDirection.PodLeft);
-                    break;
-                case PillarDirection.PillarBackRight:
-                    UpdateWall(PodDirection.PodRight);
-                    UpdateWall(PodDirection.PodBack);
-                    break;
-                default:
-                    break;
-            }
-
-            // TODO: Think about removing versus adding. Will this be automatically handled by the normal game code?
+            pillarStructureByGlobalDirection[direction].SetActive(!isInside);
+            UpdateWall(PodDirection.PodLeft);
+            UpdateWall(PodDirection.PodFront);
+            UpdateWall(PodDirection.PodRight);
+            UpdateWall(PodDirection.PodBack);
         }
 
         private void UpdateWall(PodDirection podDirection)
         {
-            // For now we just hide it for testing purposes.
-            panelByGlobalDirection[podDirection].ChangePanel(DataConfig.BuildPanelSubType.WallNull);
+            PillarDirection leftPillar = leftPillarByDirection[podDirection];
+            PillarDirection rightPillar = rightPillarByDirection[podDirection];
+            bool leftPillarInside = pillarsByGlobalDirection[leftPillar].IsInterior;
+            bool rightPillarInside = pillarsByGlobalDirection[rightPillar].IsInterior;
+            Panel podDirectionPanel = panelByGlobalDirection[podDirection];
+            if (leftPillarInside)
+            {
+                if (rightPillarInside)
+                {
+                    podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_NONE_SUBTYPE);
+                }
+                else
+                {
+                    podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_RIGHT_SUBTYPE);
+                }
+            }
+            else if (rightPillarInside)
+            {
+                podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_LEFT_SUBTYPE);
+            }
+            else if (podDirectionPanel.subPanelType >= Plugin.WALL_INTERIOR_NONE_SUBTYPE)
+            {
+                // Reset to plain wall if it was an interior wall but no longer is.
+                podDirectionPanel.ChangePanel(DataConfig.BuildPanelSubType.WallPlain);
+            }
         }
     }
 
@@ -252,16 +273,16 @@ namespace OpenInteriorSpaces_Plugin
 
         private void RecalculateInterior()
         {
-            IsInterior = (borderingPodsByDirectionFromPod.Count == 4);
-            // TODO: Need to have this emit an event to update graphics
-            // TODO: When a pillar changes each bordering pod needs to check the 2 panels on either side of the pillar and update them to either be half or no walls.
-            if (IsInterior)
+            bool newInterior = (borderingPodsByDirectionFromPod.Count == 4);
+
+            if (newInterior != IsInterior)
             {
-                // Temporary for debugging.
-                Plugin.bepInExLogger.LogInfo($"Found an interior pillar at location: '{position}'.");
+                Plugin.bepInExLogger.LogInfo($"Pillar at location: '{position}' changed to IsInterior = {newInterior}.");
+                IsInterior = newInterior;
+                
                 foreach (var borderPod in borderingPodsByDirectionFromPod)
                 {
-                    borderPod.Value.PillarBecameInterior(borderPod.Key);
+                    borderPod.Value.PillarInteriorChanged(borderPod.Key, IsInterior);
                 }
             }
         }
