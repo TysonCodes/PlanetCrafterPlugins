@@ -179,6 +179,11 @@ namespace PluginFramework
         {
             bepInExLogger.LogInfo($"Loading AssetBundle: '{assetBundlePath}'");
             AssetBundle curAssetBundle = AssetBundle.LoadFromFile(assetBundlePath);
+            if (curAssetBundle == null)
+            {
+                bepInExLogger.LogWarning($"Unable to load '{assetBundlePath}'. It may already be loaded.");
+                return;
+            }
             loadedAssetBundles.Add(curAssetBundle);
 
             LoadGameObjectsFromAssetBundle(curAssetBundle);
