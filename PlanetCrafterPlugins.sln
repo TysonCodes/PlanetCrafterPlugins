@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenInteriorSpaces_Plugin",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginFramework", "PluginFramework\PluginFramework.csproj", "{74B47961-C228-4B14-9658-BDBB46210C83}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisableBuildConstraints_Plugin", "DisableBuildConstraints\DisableBuildConstraints_Plugin.csproj", "{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,5 +74,9 @@ Global
 		{74B47961-C228-4B14-9658-BDBB46210C83}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{74B47961-C228-4B14-9658-BDBB46210C83}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{74B47961-C228-4B14-9658-BDBB46210C83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
