@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <Product>RecipeExportImport</Product>
-    <Version>2.1.0</Version>
+    <Version>2.2.0</Version>
     <AssemblyName>Lathrey-$(Product)</AssemblyName>
     <Description>A plugin to export a list of recipes in the game and import changes/additions.</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
