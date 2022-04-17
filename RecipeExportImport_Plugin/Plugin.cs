@@ -25,17 +25,17 @@ namespace RecipeExportImport_Plugin
         private const string IMPORT_FILE_NAME = "RecipesToModifyAndAdd.jsonc";
         private const string ASSET_BUNDLE_FOLDER = "AssetBundles";
 
-        private static Dictionary<string, SetGroupDataValue> groupDataDelegates;
-        private static Dictionary<string, SetGroupDataValue> groupDataItemDelegates;
-        private static Dictionary<string, SetGroupDataValue> groupDataConstructibleDelegates;
-        private static Dictionary<string, SetGroupDataValue> overrideDelegates;
+        private Dictionary<string, SetGroupDataValue> groupDataDelegates;
+        private Dictionary<string, SetGroupDataValue> groupDataItemDelegates;
+        private Dictionary<string, SetGroupDataValue> groupDataConstructibleDelegates;
+        private Dictionary<string, SetGroupDataValue> overrideDelegates;
 
         private static ManualLogSource bepInExLogger;
 
-        private static ConfigEntry<bool> configExportRecipeList;
-        private static string dataFilePath;
-        private static string exportFilePath;
-        private static string importFilePath;
+        private ConfigEntry<bool> configExportRecipeList;
+        private string dataFilePath;
+        private string exportFilePath;
+        private string importFilePath;
 
         public Plugin()
         {
@@ -185,7 +185,7 @@ namespace RecipeExportImport_Plugin
             }
         }
 
-        private static void ExportGroupDataToFile()
+        private void ExportGroupDataToFile()
         {
             FileStream exportFile = File.Open(exportFilePath, FileMode.Create);
             StringBuilder jsonStringBuilder = new StringBuilder("{", 100000);
@@ -209,7 +209,7 @@ namespace RecipeExportImport_Plugin
             exportFile.Close();
         }
 
-        private static void ApplyChangesToGroupDataFromFile()
+        private void ApplyChangesToGroupDataFromFile()
         {
             JObject rootObject = JObject.Parse(File.ReadAllText(importFilePath));
             foreach (var modification in (JObject) rootObject["Modifications"])
@@ -227,7 +227,7 @@ namespace RecipeExportImport_Plugin
             }
         }
 
-        private static void ApplyModification(KeyValuePair<string, JToken> modification)
+        private void ApplyModification(KeyValuePair<string, JToken> modification)
         {
             if (Framework.GroupDataById.ContainsKey(modification.Key))
             {
@@ -251,7 +251,7 @@ namespace RecipeExportImport_Plugin
             }            
         }
 
-        private static void AddItem(KeyValuePair<string, JToken> itemToAdd)
+        private void AddItem(KeyValuePair<string, JToken> itemToAdd)
         {
             bepInExLogger.LogInfo($"Adding new item '{itemToAdd.Key}'");
             GroupDataItem newItem = Framework.CreateItem(itemToAdd.Key);
@@ -270,7 +270,7 @@ namespace RecipeExportImport_Plugin
             Framework.AddGroupDataToList(newItem);
         }
 
-        private static void AddBuilding(KeyValuePair<string, JToken> buildingToAdd)
+        private void AddBuilding(KeyValuePair<string, JToken> buildingToAdd)
         {
             bepInExLogger.LogInfo($"Adding new building '{buildingToAdd.Key}'");
             GroupDataConstructible newBuilding = Framework.CreateConstructible(buildingToAdd.Key);
