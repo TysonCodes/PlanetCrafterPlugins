@@ -149,7 +149,7 @@ namespace RecipeExportImport_Plugin
         {
             bepInExLogger = Logger;
 
-            configExportRecipeList = Config.Bind("General", "Export_Recipe_List", false, 
+            configExportRecipeList = Config.Bind("General", "Export_Recipe_List", true, 
                 "Enables or disables exporting the current recipe list on loading of the game. Slows down loading.");
 
             Framework.StaticGroupDataIndexed += OnStaticGroupDataIndexed;
