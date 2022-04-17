@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -12,6 +11,8 @@ using UnityEngine;
 namespace PluginFramework
 {
     public delegate void Trigger();
+    public delegate void InstantiationEvent(ref WorldObject worldObject, ref GameObject gameObject, bool fromSaveFile);
+    public delegate void WorldObjectEvent(ref WorldObject worldObject);
 
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
@@ -23,6 +24,8 @@ namespace PluginFramework
         public static event Trigger GameStateLoaded;
         public static event Trigger GameStateSavingStarted;
         public static event Trigger GameStateSaved;
+        public static event InstantiationEvent WorldObjectInstantiated;
+        public static event WorldObjectEvent WorldObjectBeingDestroyed;
         #endregion
 
         #region PublicAPI
@@ -255,7 +258,23 @@ namespace PluginFramework
         {
             GameStateSaved?.Invoke();
         }
-        
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(WorldObjectsHandler), "InstantiateWorldObject")]
+        private static void WorldObjectsHandler_InstantiateWorldObject_Postfix(ref WorldObject _worldObject, bool _fromDb, ref GameObject __result)
+        {
+            WorldObjectInstantiated?.Invoke(ref _worldObject, ref __result, _fromDb);
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(WorldObjectsHandler), "DestroyWorldObject")]
+        private static bool WorldObjectsHandler_DestroyWorldObject_Prefix(ref WorldObject _worldObject)
+        {
+            WorldObjectBeingDestroyed?.Invoke(ref _worldObject);
+
+            return true;
+        }
+
         private static void IndexExistingGroupData()
         {
             foreach (var groupData in gameGroupData)
