@@ -7,6 +7,7 @@ using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using SpaceCraft;
+using MijuTools;
 using UnityEngine;
 using Newtonsoft.Json.Linq;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace RecipeExportImport_Plugin
         private delegate void SetGroupDataValue(GroupData groupToEdit, string valueToEdit, JToken newValue);
 
         private const string EXPORT_FILE_NAME = "CurrentRecipeList.json";
+        private const string CRAFTABLE_LIST_FILE_NAME = "CraftableList.txt";
         private const string IMPORT_FILE_NAME = "RecipesToModifyAndAdd.jsonc";
         private const string ASSET_BUNDLE_FOLDER = "AssetBundles";
 
@@ -35,6 +37,7 @@ namespace RecipeExportImport_Plugin
         private ConfigEntry<bool> configExportRecipeList;
         private string dataFilePath;
         private string exportFilePath;
+        private string craftableListFilePath;
         private string importFilePath;
 
         public Plugin()
@@ -42,6 +45,7 @@ namespace RecipeExportImport_Plugin
             PrintOutDependencies();
             dataFilePath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "DataFiles");
             exportFilePath = Path.Combine(dataFilePath, EXPORT_FILE_NAME);
+            craftableListFilePath = Path.Combine(dataFilePath, CRAFTABLE_LIST_FILE_NAME);
             importFilePath = Path.Combine(dataFilePath, IMPORT_FILE_NAME);
 
             groupDataDelegates = new Dictionary<string, SetGroupDataValue>();
@@ -172,6 +176,16 @@ namespace RecipeExportImport_Plugin
                 }
             }
 
+            bepInExLogger.LogInfo($"Logging craftables list to {craftableListFilePath}");
+            try
+            {
+                WriteCraftableListToFile();
+            }
+            catch (Exception ex)
+            {
+                bepInExLogger.LogError($"Caught exception '{ex.Message}' trying to output craftable list.");
+            }
+
             string assetBundleFolderPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), ASSET_BUNDLE_FOLDER);
             Framework.LoadAssetBundlesFromFolder(assetBundleFolderPath);
 
@@ -207,6 +221,29 @@ namespace RecipeExportImport_Plugin
             string jsonString = jsonStringBuilder.ToString();
             exportFile.Write(Encoding.UTF8.GetBytes(jsonString), 0, jsonString.Length);
             exportFile.Close();
+        }
+
+        private void WriteCraftableListToFile()
+        {
+            FileStream craftableListFile = File.Open(craftableListFilePath, FileMode.Create);
+            StringBuilder craftableListStringBuilder = new StringBuilder("", 20000);
+            foreach (var entry in Framework.GroupDataById)
+            {
+                craftableListStringBuilder.AppendFormat("\"{0}\" : {1}\n", GetNameForGroup(entry.Key), entry.Key);
+            }
+            string craftableListString = craftableListStringBuilder.ToString();
+            craftableListFile.Write(Encoding.UTF8.GetBytes(craftableListString), 0, craftableListString.Length);
+            craftableListFile.Close();
+        }
+
+        private string GetNameForGroup(string groupName)
+        {
+            string localizedString = Localization.GetLocalizedString(GameConfig.localizationGroupNameId + groupName);
+            if (!(localizedString == ""))
+            {
+                return localizedString;
+            }
+            return "Not localized";
         }
 
         private void ApplyChangesToGroupDataFromFile()
