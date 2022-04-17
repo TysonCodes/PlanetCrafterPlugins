@@ -1,9 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using BepInEx;
-using BepInEx.Configuration;
+﻿using BepInEx;
 using BepInEx.Logging;
-using HarmonyLib;
 using MijuTools;
 using SpaceCraft;
 using UnityEngine;
@@ -16,8 +12,6 @@ namespace OpenInteriorSpaces_Plugin
     [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, PluginFramework.PluginInfo.PLUGIN_VERSION)]    // In BepInEx 5.4.x this ia a minimum version, BepInEx 6.x has range semantics.
     public class Plugin : BaseUnityPlugin
     {
-        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
-
         public static ManualLogSource bepInExLogger;
 
         public const DataConfig.BuildPanelSubType FIRST_CUSTOM_SUBTYPE = (DataConfig.BuildPanelSubType) 100;
@@ -36,36 +30,31 @@ namespace OpenInteriorSpaces_Plugin
         {
             bepInExLogger = Logger;
 
-            harmony.PatchAll(typeof(OpenInteriorSpaces_Plugin.Plugin));
-
             Framework.GameStateLoadingStarted += OnGameStateLoadingStarted;
+            Framework.WorldObjectInstantiated += OnWorldObjectBeingInstantiated;
+            Framework.WorldObjectBeingDestroyed += OnWorldObjectBeingDestroyed;
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        [HarmonyPostfix]
-        [HarmonyPatch(typeof(WorldObjectsHandler), "InstantiateWorldObject")]
-        private static void WorldObjectsHandler_InstantiateWorldObject_Postfix(WorldObject _worldObject, bool _fromDb, ref GameObject __result)
+        private void OnWorldObjectBeingInstantiated(ref WorldObject worldObject, ref GameObject gameObject, bool fromSaveFile)
         {
             // Only do this for Pods.
-            if (_worldObject.GetGroup().GetId() == "pod")
+            if (worldObject.GetGroup().GetId() == "pod")
             {
-                PodInfo newPod = new PodInfo(_worldObject, __result);
+                PodInfo newPod = new PodInfo(worldObject, gameObject);
             }
         }
 
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(WorldObjectsHandler), "DestroyWorldObject")]
-        private static bool WorldObjectsHandler_DestroyWorldObject_Prefix(WorldObject _worldObject)
+        private void OnWorldObjectBeingDestroyed(ref WorldObject worldObject)
         {
-            if (_worldObject.GetGroup().GetId() == "pod")
+            if (worldObject.GetGroup().GetId() == "pod")
             {
-                if (PodInfo.podsByWorldId.TryGetValue(_worldObject.GetId(), out PodInfo podToDelete))
+                if (PodInfo.podsByWorldId.TryGetValue(worldObject.GetId(), out PodInfo podToDelete))
                 {
                     podToDelete.Remove();
                 }
             }
-            return true;
         }
 
         private void OnGameStateLoadingStarted()
@@ -181,11 +170,5 @@ namespace OpenInteriorSpaces_Plugin
             panelMgr.panelsGameObjects.Add(interiorRoomWallPanelRightGO);
             panelMgr.panelsGroupItems.Add(null);
         }
-
-        private void OnDestroy()
-        {
-            harmony.UnpatchSelf();
-        }
     }
-    
 }
