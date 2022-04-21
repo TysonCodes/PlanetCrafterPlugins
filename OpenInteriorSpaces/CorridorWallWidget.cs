@@ -9,8 +9,8 @@ namespace OpenInteriorSpaces_Plugin
         public GameObject[] originalWallAndColliders;
         public GameObject interiorCorridorWallAndColliders;
 
+        private const string GAME_OBJECT_TO_GET_FLOOR_FROM = "Biolab";
         private const string GAME_OBJECT_PATH_TO_FLOOR = "Container/4BlocRoom/Common/Floor/P_Floor_Tinny_02_LP";
-        private const string GAME_OBJECT_PATH_TO_HALF_WALL = "Container/4BlocRoom/Common/P_Wall_Half_01";
 
         private static GameObject interiorCorridorWallAndCollidersOnPrefab;
 
@@ -52,7 +52,7 @@ namespace OpenInteriorSpaces_Plugin
 
         private static void CreateNewInteriorCorridorWallAndCollidersOnPrefab()
         {
-            GameObject largeRoomGO = Framework.GameObjectByName["Pod4x"];
+            GameObject largeRoomGO = Framework.GameObjectByName[GAME_OBJECT_TO_GET_FLOOR_FROM];
             GameObject commonFloorPanelGO = Instantiate(largeRoomGO.transform.Find(GAME_OBJECT_PATH_TO_FLOOR).gameObject, null);
             commonFloorPanelGO.transform.localPosition = Vector3.zero;
             commonFloorPanelGO.transform.localEulerAngles = Vector3.zero;
