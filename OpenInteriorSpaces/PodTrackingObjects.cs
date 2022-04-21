@@ -210,51 +210,19 @@ namespace OpenInteriorSpaces_Plugin
             GameObject rightPillar = pillarStructureByGlobalDirection[rightPillarDirection];
             Panel podDirectionPanel = panelByGlobalDirection[podDirection];
             Plugin.bepInExLogger.LogDebug($"UpdateWall {podDirection} for pod: {associatedWorldObj.GetId()}");
-            if (leftPillarInside)
+            if (podDirectionPanel.subPanelType == DataConfig.BuildPanelSubType.WallCorridor && (leftPillarInside || rightPillarInside))
             {
-                leftPillar.SetActive(false);
-                rightPillar.SetActive(false);
-                if (!interiorWalls.Contains(podDirection))
+                CorridorWallWidget widget = podDirectionPanel.GetComponentInChildren<CorridorWallWidget>();
+                if (widget == null)
                 {
-                    interiorWalls.Add(podDirection);
-                }
-                Plugin.bepInExLogger.LogDebug($"\tHiding pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
-                if (rightPillarInside)
-                {
-                    podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_NONE_SUBTYPE);
+                    Plugin.bepInExLogger.LogError("Unable to get CorridorWallWidget component for a corridor panel.");
                 }
                 else
                 {
-                    podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_RIGHT_SUBTYPE);
+                    widget.ShowInteriorWall();
                 }
             }
-            else if (rightPillarInside)
-            {
-                leftPillar.SetActive(false);
-                rightPillar.SetActive(false);
-                if (!interiorWalls.Contains(podDirection))
-                {
-                    interiorWalls.Add(podDirection);
-                }
-                Plugin.bepInExLogger.LogDebug($"\tHiding pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
-                podDirectionPanel.ChangePanel(Plugin.WALL_INTERIOR_LEFT_SUBTYPE);
-            }
-            else if (interiorWalls.Contains(podDirection))
-            {
-                // Reset if it was an interior wall but no longer is.
-                leftPillar.SetActive(true);
-                rightPillar.SetActive(true);
-                interiorWalls.Remove(podDirection);
-                Plugin.bepInExLogger.LogDebug($"\tShowing pillar {leftPillarDirection} and {rightPillarDirection} for pod: {associatedWorldObj.GetId()}");
-                if (podByGlobalDirection.ContainsKey(podDirection))
-                {
-                    podDirectionPanel.ChangePanel(DataConfig.BuildPanelSubType.WallCorridor);
-                }
-                else
-                {
-                    podDirectionPanel.ChangePanel(DataConfig.BuildPanelSubType.WallPlain);
-                }
-            }
+
         }
     }
 
