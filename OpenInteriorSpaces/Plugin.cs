@@ -16,6 +16,8 @@ namespace OpenInteriorSpaces_Plugin
 
         public const DataConfig.BuildPanelSubType FIRST_CUSTOM_SUBTYPE = (DataConfig.BuildPanelSubType) 100;
 
+        private const string POD_GAME_OBJECT_NAME = "Pod";
+
         private void Awake()
         {
             bepInExLogger = Logger;
@@ -53,6 +55,7 @@ namespace OpenInteriorSpaces_Plugin
             PodInfo.Reset();
             PillarInfo.Reset();
             InjectCorridorWallWidget();
+            InjectPodWidget();
         }
 
         private void InjectCorridorWallWidget()
@@ -62,6 +65,15 @@ namespace OpenInteriorSpaces_Plugin
             if (!corridorWallGameObject.TryGetComponent<CorridorWallWidget>(out CorridorWallWidget result))
             {
                 CorridorWallWidget.InjectWidgetIntoCorridorWallPrefab(ref corridorWallGameObject);
+            }
+        }
+        
+        private void InjectPodWidget()
+        {
+            GameObject podPrefab = Framework.GameObjectByName[POD_GAME_OBJECT_NAME];
+            if (!podPrefab.TryGetComponent<PodWidget>(out PodWidget result))
+            {
+                PodWidget.InjectWidgetIntoPodPrefab();
             }
         }
     }
