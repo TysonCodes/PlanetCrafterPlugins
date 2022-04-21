@@ -210,16 +210,23 @@ namespace OpenInteriorSpaces_Plugin
             GameObject rightPillar = pillarStructureByGlobalDirection[rightPillarDirection];
             Panel podDirectionPanel = panelByGlobalDirection[podDirection];
             Plugin.bepInExLogger.LogDebug($"UpdateWall {podDirection} for pod: {associatedWorldObj.GetId()}");
-            if (podDirectionPanel.subPanelType == DataConfig.BuildPanelSubType.WallCorridor && (leftPillarInside || rightPillarInside))
+            if (podDirectionPanel.subPanelType == DataConfig.BuildPanelSubType.WallCorridor)
             {
                 CorridorWallWidget widget = podDirectionPanel.GetComponentInChildren<CorridorWallWidget>();
                 if (widget == null)
                 {
-                    Plugin.bepInExLogger.LogError("Unable to get CorridorWallWidget component for a corridor panel.");
+                    Plugin.bepInExLogger.LogError("Unable to get a CorridorWallWidget for a corridor.");
+                    return;
+                }
+                if (leftPillarInside || rightPillarInside)
+                {
+                    Plugin.bepInExLogger.LogDebug($"\tChanging corridor to interior for pod: {associatedWorldObj.GetId()}, direction: {podDirection}");
+                    widget.ShowInteriorWall();
                 }
                 else
                 {
-                    widget.ShowInteriorWall();
+                    Plugin.bepInExLogger.LogDebug($"\tChanging corridor to original for pod: {associatedWorldObj.GetId()}, direction: {podDirection}");
+                    widget.ShowOriginalWall();
                 }
             }
 
