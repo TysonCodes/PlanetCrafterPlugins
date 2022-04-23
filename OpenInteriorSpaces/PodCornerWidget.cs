@@ -258,7 +258,19 @@ namespace OpenInteriorSpaces_Plugin
 
         private void CreateWallBlockerGameObjects()
         {
-            throw new System.NotImplementedException();
+            blockerForWallCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            blockerForWallCW.transform.SetParent(originalCorner.transform, false);
+            blockerForWallCW.transform.localPosition = new Vector3(-1.0f, 0.5f, 2.0f);
+            blockerForWallCW.transform.localEulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
+            blockerForWallCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
+            RepositionAndHideNewGameObject(blockerForWallCW);
+
+            blockerForWallCCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            blockerForWallCCW.transform.SetParent(originalCorner.transform, false);
+            blockerForWallCCW.transform.localPosition = new Vector3(-1.0f, 0.5f, 2.0f);
+            blockerForWallCCW.transform.localEulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
+            blockerForWallCCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
+            RepositionAndHideNewGameObject(blockerForWallCCW);
         }
 
         private void RepositionAndHideNewGameObject(GameObject gameObject)
