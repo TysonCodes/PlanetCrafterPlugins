@@ -98,6 +98,7 @@ namespace OpenInteriorSpaces_Plugin
                     }
                 }
             }
+            Plugin.bepInExLogger.LogDebug($"Updating pillar at {originalCorner.transform.position} to {newCornerType}");
             SetVisibleCornerType(newCornerType);
         }
 
@@ -215,7 +216,7 @@ namespace OpenInteriorSpaces_Plugin
 
             // Container for floor and ceiling.
             cornerWidget.topBottomCorner = new GameObject("CeilingAndFloor");
-            cornerWidget.topBottomCorner.transform.SetParent(podCornerContainerTransform);
+            cornerWidget.topBottomCorner.transform.SetParent(podCornerContainerTransform, false);
 
             // Floor
             GameObject floorGO = new GameObject("Floor");
