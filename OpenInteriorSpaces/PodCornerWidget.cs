@@ -28,9 +28,10 @@ namespace OpenInteriorSpaces_Plugin
 
         private const string GAME_OBJECT_TO_GET_FLOOR_FROM = "Biolab";
         private const string GAME_OBJECT_PATH_TO_FLOOR = "Container/4BlocRoom/Common/Floor/P_Floor_Tinny_02_LP";
+        private const string GAME_OBJECT_PATH_TO_HALF_WALL = "Container/4BlocRoom/Common/P_Wall_Half_01";
 
         // TODO: Do I need a default constructor for cloning of this via Instantiate?
-        
+
         public PodCornerWidget(GameObject original, PodWidget pod, PodDirection wallDirectionCW, PodDirection wallDirectionCCW)
         {
             originalCorner = original;
@@ -166,8 +167,8 @@ namespace OpenInteriorSpaces_Plugin
         #region CreateGameObjects
         private void CreateTopBottomGameObject()
         {
-            GameObject largeRoomGO = Framework.GameObjectByName[GAME_OBJECT_TO_GET_FLOOR_FROM];
-            GameObject commonFloorPanelGO = Object.Instantiate(largeRoomGO.transform.Find(GAME_OBJECT_PATH_TO_FLOOR).gameObject, null);
+            GameObject floorCeilingSourceGO = Framework.GameObjectByName[GAME_OBJECT_TO_GET_FLOOR_FROM];
+            GameObject commonFloorPanelGO = Object.Instantiate(floorCeilingSourceGO.transform.Find(GAME_OBJECT_PATH_TO_FLOOR).gameObject, null);
             commonFloorPanelGO.transform.localPosition = Vector3.zero;
             commonFloorPanelGO.transform.localEulerAngles = Vector3.zero;
             commonFloorPanelGO.transform.localScale = Vector3.one;
@@ -228,7 +229,31 @@ namespace OpenInteriorSpaces_Plugin
 
         private void CreateWallGameObjects()
         {
-            throw new System.NotImplementedException();
+            GameObject halfWallSourceGO = Framework.GameObjectByName[GAME_OBJECT_TO_GET_FLOOR_FROM];
+            GameObject commonHalfWallGO = Instantiate(halfWallSourceGO.transform.Find(GAME_OBJECT_PATH_TO_HALF_WALL).gameObject, null);
+            commonHalfWallGO.transform.localPosition = Vector3.zero;
+            commonHalfWallGO.transform.localEulerAngles = Vector3.zero;
+            commonHalfWallGO.transform.localScale = Vector3.one;
+            commonHalfWallGO.name = "HalfWall";
+
+            // WallCW
+            wallCW = new GameObject("WallCW");
+            wallCW.transform.SetParent(originalCorner.transform, false);
+            wallCW.transform.localPosition = new Vector3(-1.0f, 0.0f, 0.0f);
+            wallCW.transform.localEulerAngles = new Vector3(0.0f, -90.0f, -90.0f);
+            wallCW.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f / 3.0f);
+            Instantiate(commonHalfWallGO, wallCW.transform).name = commonHalfWallGO.name;
+            RepositionAndHideNewGameObject(wallCW);
+
+
+            // WallCW
+            wallCCW = new GameObject("WallCCW");
+            wallCCW.transform.SetParent(originalCorner.transform, false);
+            wallCCW.transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+            wallCCW.transform.localEulerAngles = new Vector3(90.0f, 0.0f, 0.0f);
+            wallCCW.transform.localScale = new Vector3(1.0f, 1.0f, 1.0f / 3.0f);
+            Instantiate(commonHalfWallGO, wallCCW.transform).name = commonHalfWallGO.name;
+            RepositionAndHideNewGameObject(wallCCW);
         }
 
         private void CreateWallBlockerGameObjects()
