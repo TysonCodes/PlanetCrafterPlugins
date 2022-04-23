@@ -85,18 +85,18 @@ namespace OpenInteriorSpaces_Plugin
                 }
                 else if (CWIsCorridor())
                 {
-                    newCornerType = PodCornerType.PCT_Wall_CCW;
+                    newCornerType = PodCornerType.PCT_Wall_CW;
                     if (AdjacentWallIsNotCorridor(directionOfWallCCW))
                     {
-                        blockerForWallCCW.SetActive(false);
+                        blockerForWallCW.SetActive(false);
                     }
                 }
                 else if (CCWIsCorridor())
                 {
-                    newCornerType = PodCornerType.PCT_Wall_CW;
+                    newCornerType = PodCornerType.PCT_Wall_CCW;
                     if (AdjacentWallIsNotCorridor(directionOfWallCW))
                     {
-                        blockerForWallCW.SetActive(false);
+                        blockerForWallCCW.SetActive(false);
                     }
                 }
             }
