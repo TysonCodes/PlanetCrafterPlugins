@@ -32,27 +32,24 @@ namespace OpenInteriorSpaces_Plugin
         private void OnWorldObjectBeingInstantiated(ref WorldObject worldObject, ref GameObject gameObject, bool fromSaveFile)
         {
             // Only do this for Pods.
-            if (worldObject.GetGroup().GetId() == "pod")
+            if (worldObject.GetGroup().GetId() == "pod" && gameObject.TryGetComponent<PodWidget>(out PodWidget pod))
             {
-                PodInfo newPod = new PodInfo(worldObject, gameObject);
+                pod.Initialize();
             }
         }
 
         private void OnWorldObjectBeingDestroyed(ref WorldObject worldObject)
         {
-            if (worldObject.GetGroup().GetId() == "pod")
+            if (worldObject.GetGroup().GetId() == "pod" && gameObject.TryGetComponent<PodWidget>(out PodWidget pod))
             {
-                if (PodInfo.podsByWorldId.TryGetValue(worldObject.GetId(), out PodInfo podToDelete))
-                {
-                    podToDelete.Remove();
-                }
+                pod.Remove();
             }
         }
 
         private void OnGameStateLoadingStarted()
         {
             // Reset the PodInfo and PillarInfo static values.
-            PodInfo.Reset();
+            PodWidget.Reset();
             PillarInfo.Reset();
             InjectCorridorWallWidget();
             InjectPodWidget();

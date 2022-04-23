@@ -1,21 +1,236 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using SpaceCraft;
 using PluginFramework;
 
 namespace OpenInteriorSpaces_Plugin
 {
-    class PodWidget : MonoBehaviour
+    public class PodWidget : MonoBehaviour
     {
         public Panel[] panelByLocalDirection;
         public PodCornerWidget[] podCornerByLocalDirection;
 
         private const string POD_GAME_OBJECT_NAME = "Pod";
-        private const string GAME_OBJECT_PATH_TO_STRUCTURE = "Container/Structure";
+        private const float DETECT_DISTANCE = 2.0f;
+        private const int POD_SPACING = 80;
+        private static Dictionary<Vector3Int, PodWidget> podsByLocation = new Dictionary<Vector3Int, PodWidget>();
+        private static Dictionary<int, PodWidget> podsByWorldId = new Dictionary<int, PodWidget>();
+        private static readonly Dictionary<PodDirection, PillarDirection> leftPillarByDirection = new Dictionary<PodDirection, PillarDirection>() {
+            {PodDirection.PodFront, PillarDirection.PillarFrontLeft},
+            {PodDirection.PodRight, PillarDirection.PillarFrontRight},
+            {PodDirection.PodBack, PillarDirection.PillarBackRight},
+            {PodDirection.PodLeft, PillarDirection.PillarBackLeft}
+        };
+
+        private static readonly Dictionary<PodDirection, PillarDirection> rightPillarByDirection = new Dictionary<PodDirection, PillarDirection>() {
+            {PodDirection.PodFront, PillarDirection.PillarFrontRight},
+            {PodDirection.PodRight, PillarDirection.PillarBackRight},
+            {PodDirection.PodBack, PillarDirection.PillarBackLeft},
+            {PodDirection.PodLeft, PillarDirection.PillarFrontLeft}
+        };
+
+        private WorldObject associatedWorldObj;
+        private Vector3Int position;
+        private PodRotation rotation;
+        private Dictionary<PodDirection, Panel> panelByGlobalDirection = new Dictionary<PodDirection, Panel>();
+        private Dictionary<PodDirection, PodWidget> podByGlobalDirection = new Dictionary<PodDirection, PodWidget>();
+        private Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
 
         public bool AdjacentWallIsCorridor(PodDirection localDirection)
         {
-            throw new System.NotImplementedException(); 
+            PodDirection globalDirection = CalculateRotatedPodDirection(localDirection, rotation);
+            if (podByGlobalDirection.TryGetValue(globalDirection, out PodWidget adjacentPod))
+            {
+                PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(globalDirection, PodRotation.Half);
+                return (adjacentPod.panelByGlobalDirection[flippedGlobalDirection].subPanelType == DataConfig.BuildPanelSubType.WallCorridor);
+            }
+            return false;
+        }
+
+        public void Initialize()
+        {
+            // Called after WorldObjectsHandler.InstantiateWorldObject so all components exist and corridors have been determined.
+            associatedWorldObj = GetComponent<WorldObjectAssociated>().GetWorldObject();
+            position = PositionFloatToInt(transform.position);
+            rotation = CalculateRotation(transform.eulerAngles.y);
+            podsByLocation[position] = this;
+            podsByWorldId[associatedWorldObj.GetId()] = this;
+            Plugin.bepInExLogger.LogDebug($"Adding Pod. WorldObject: {associatedWorldObj.GetId()}, Location: {position}, Rotation: {rotation}");
+
+            CalculatePanelDirections();
+            DetectAdjacentPods();
+            GeneratePillarInfo();
+        }
+
+        public void Remove()
+        {
+            podsByLocation.Remove(position);
+            podsByWorldId.Remove(associatedWorldObj.GetId());
+            foreach (var adjacentPod in podByGlobalDirection)
+            {
+                if (adjacentPod.Value != null)
+                {
+                    PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(adjacentPod.Key, PodRotation.Half);
+                    adjacentPod.Value.podByGlobalDirection.Remove(flippedGlobalDirection);
+                }
+            }
+            foreach (var pillar in pillarsByGlobalDirection)
+            {
+                DetatchFromPillar(pillar.Value);
+            }
+            pillarsByGlobalDirection.Clear();
+            panelByGlobalDirection.Clear();
+            podByGlobalDirection.Clear();
+            foreach (var corner in podCornerByLocalDirection)
+            {
+                corner.SetAssociatedPillar(null);
+            }
+        }
+
+        private void DetatchFromPillar(PillarInfo pillar)
+        {
+            pillar.RemoveBorderingPod(this);
+            pillar.IsInteriorChanged -= OnPillarInteriorChanged;
+        }
+
+        private void OnPillarInteriorChanged()
+        {
+            UpdateWall(PodDirection.PodLeft);
+            UpdateWall(PodDirection.PodFront);
+            UpdateWall(PodDirection.PodRight);
+            UpdateWall(PodDirection.PodBack);
+        }
+
+        private void UpdateWall(PodDirection podDirection)
+        {
+            PillarDirection leftPillarDirection = leftPillarByDirection[podDirection];
+            PillarDirection rightPillarDirection = rightPillarByDirection[podDirection];
+            bool leftPillarInside = pillarsByGlobalDirection[leftPillarDirection].IsInterior;
+            bool rightPillarInside = pillarsByGlobalDirection[rightPillarDirection].IsInterior;
+            Panel podDirectionPanel = panelByGlobalDirection[podDirection];
+            Plugin.bepInExLogger.LogDebug($"UpdateWall {podDirection} for pod: {associatedWorldObj.GetId()}");
+            if (podDirectionPanel.subPanelType == DataConfig.BuildPanelSubType.WallCorridor)
+            {
+                CorridorWallWidget widget = podDirectionPanel.GetComponentInChildren<CorridorWallWidget>();
+                if (widget == null)
+                {
+                    Plugin.bepInExLogger.LogError("Unable to get a CorridorWallWidget for a corridor.");
+                    return;
+                }
+                if (leftPillarInside || rightPillarInside)
+                {
+                    Plugin.bepInExLogger.LogDebug($"\tChanging corridor to interior for pod: {associatedWorldObj.GetId()}, direction: {podDirection}");
+                    widget.ShowInteriorWall();
+                }
+                else
+                {
+                    Plugin.bepInExLogger.LogDebug($"\tChanging corridor to original for pod: {associatedWorldObj.GetId()}, direction: {podDirection}");
+                    widget.ShowOriginalWall();
+                }
+            }
+        }
+
+        private Vector3Int PositionFloatToInt(Vector3 position)
+        {
+            return new Vector3Int(Mathf.RoundToInt(position.x * 10.0f), Mathf.RoundToInt(position.y * 10.0f), Mathf.RoundToInt(position.z * 10.0f));
+        }
+
+        private void CalculatePanelDirections()
+        {
+            foreach (PodDirection localDirection in Enum.GetValues(typeof(PodDirection)))
+            {
+                PodDirection globalDirection = CalculateRotatedPodDirection(localDirection, rotation);
+                panelByGlobalDirection[globalDirection] = panelByLocalDirection[(int) localDirection];
+            }
+        }
+
+        private PodRotation CalculateRotation(float y)
+        {
+            if (Mathf.Abs(Mathf.DeltaAngle(y, 90.0f)) < 0.1f)
+            {
+                return PodRotation.CW_Quarter;
+            }
+            if (Mathf.Abs(Mathf.DeltaAngle(y, 180.0f)) < 0.1f)
+            {
+                return PodRotation.Half;
+            }
+            if (Mathf.Abs(Mathf.DeltaAngle(y, -90.0f)) < 0.1f)
+            {
+                return PodRotation.CCW_Quarter;
+            }
+            return PodRotation.None;
+        }
+
+        private void GeneratePillarInfo()
+        {
+            foreach (PillarDirection localDirection in Enum.GetValues(typeof(PillarDirection)))
+            {
+                PillarDirection globalDirection = CalculateGlobalPillarDirection(localDirection);
+                PillarInfo curPillar = PillarInfo.GetPillarAtLocation(position, globalDirection);
+                podCornerByLocalDirection[(int) localDirection].Initialize();
+                podCornerByLocalDirection[(int) localDirection].SetAssociatedPillar(curPillar);
+                curPillar.IsInteriorChanged += OnPillarInteriorChanged;
+                pillarsByGlobalDirection[globalDirection] = curPillar;
+            }
+            foreach (var pillar in pillarsByGlobalDirection)
+            {
+                pillar.Value.AddBorderingPod(this, pillar.Key);
+            }
+        }
+
+        private PillarDirection CalculateGlobalPillarDirection(PillarDirection startDirection)
+        {
+            int newPillarDirection = ((int)startDirection + (int)rotation) % 4;
+            return (PillarDirection)newPillarDirection;
+        }
+
+        private void DetectAdjacentPods()
+        {
+            // Update adjacency tracking
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodRight, TryToGetNearbyPod(position + (Vector3Int.right * POD_SPACING)));
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodLeft, TryToGetNearbyPod(position + (Vector3Int.left * POD_SPACING)));
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodFront, TryToGetNearbyPod(position + (Vector3Int.forward * POD_SPACING)));
+            UpdateAdjacentPodsIfApplicable(PodDirection.PodBack, TryToGetNearbyPod(position + (Vector3Int.back * POD_SPACING)));
+        }
+
+        private PodWidget TryToGetNearbyPod(Vector3Int locationToCheck, int tolerance = 5)
+        {
+            var result = podsByLocation.FirstOrDefault(podAtLocation => (podAtLocation.Key - locationToCheck).magnitude < tolerance);
+            return result.Value;
+        }
+
+        private void UpdateAdjacentPodsIfApplicable(PodDirection globalDirection, PodWidget adjacentPod)
+        {
+            if (adjacentPod != null)
+            {
+                // Update this pod to point to the adjacent pod
+                AddAdjacentPod(globalDirection, adjacentPod);
+
+                // Update the adjacent pod to point back to this pod
+                PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(globalDirection, PodRotation.Half);
+                adjacentPod.AddAdjacentPod(flippedGlobalDirection, this);
+            }
+        }
+
+        private void AddAdjacentPod(PodDirection globalDirection, PodWidget adjacentPod)
+        {
+            Plugin.bepInExLogger.LogDebug($"Adding adjacent pod from '{this.associatedWorldObj.GetId()}' to '{adjacentPod.associatedWorldObj.GetId()}' in global direction '{globalDirection}'.");
+            podByGlobalDirection[globalDirection] = adjacentPod;
+        }
+
+        private PodDirection CalculateRotatedPodDirection(PodDirection startDirection, PodRotation rotationAmount)
+        {
+            int newPodDirection = ((int)startDirection + (int)rotationAmount) % 4;
+            return (PodDirection)newPodDirection;
+        }
+
+        #region StaticMethods
+        public static void Reset()
+        {
+            podsByLocation = new Dictionary<Vector3Int, PodWidget>();
+            podsByWorldId = new Dictionary<int, PodWidget>();
         }
 
         public static void InjectWidgetIntoPodPrefab()
@@ -29,7 +244,7 @@ namespace OpenInteriorSpaces_Plugin
             widgetOnPrefab.panelByLocalDirection = GetReferencesToPanels(podPrefab);
 
             // Create corners and attach to widget
-            widgetOnPrefab.podCornerByLocalDirection = CreatePodCornerWidgets(ref podPrefab, widgetOnPrefab);
+            widgetOnPrefab.podCornerByLocalDirection = PodCornerWidget.InjectNewObjectsIntoPrefab(ref podPrefab, ref widgetOnPrefab);
         }
 
         private static Panel[] GetReferencesToPanels(GameObject podPrefab)
@@ -44,20 +259,6 @@ namespace OpenInteriorSpaces_Plugin
             result[(int)PodDirection.PodLeft] = panelsOnPrefab[3];
             return result;
         }
-
-        private static PodCornerWidget[] CreatePodCornerWidgets(ref GameObject podPrefab, PodWidget prefabWidget)
-        {
-            // Pillars are called 'Wall_Angle_03' inside 'Structure' inside 'Container' in the Pod gameobject.
-            // They have capsule colliders on them.
-            // They are ordered locally - BackRight, BackLeft, FrontRight, FrontLeft
-            Transform structureGameObject = podPrefab.transform.Find(GAME_OBJECT_PATH_TO_STRUCTURE);
-            CapsuleCollider[] pillarStructures = structureGameObject.GetComponentsInChildren<CapsuleCollider>();
-            PodCornerWidget[] result = new PodCornerWidget[4];
-            result[(int)PillarDirection.PillarBackRight] = new PodCornerWidget(pillarStructures[0].gameObject, prefabWidget, PodDirection.PodBack, PodDirection.PodRight);
-            result[(int)PillarDirection.PillarBackLeft] = new PodCornerWidget(pillarStructures[1].gameObject, prefabWidget, PodDirection.PodLeft, PodDirection.PodBack);
-            result[(int)PillarDirection.PillarFrontRight] = new PodCornerWidget(pillarStructures[2].gameObject, prefabWidget, PodDirection.PodRight, PodDirection.PodFront);
-            result[(int)PillarDirection.PillarFrontLeft] = new PodCornerWidget(pillarStructures[3].gameObject, prefabWidget, PodDirection.PodFront, PodDirection.PodLeft);
-            return result;
-        }
+        #endregion
     }
 }
