@@ -13,6 +13,11 @@ namespace OpenInteriorSpaces_Plugin
         private const string POD_GAME_OBJECT_NAME = "Pod";
         private const string GAME_OBJECT_PATH_TO_STRUCTURE = "Container/Structure";
 
+        public bool AdjacentWallIsCorridor(PodDirection localDirection)
+        {
+            throw new System.NotImplementedException(); 
+        }
+
         public static void InjectWidgetIntoPodPrefab()
         {
             GameObject podPrefab = Framework.GameObjectByName[POD_GAME_OBJECT_NAME];

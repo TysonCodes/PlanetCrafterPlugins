@@ -120,9 +120,7 @@ namespace OpenInteriorSpaces_Plugin
 
         private bool AdjacentWallIsNotCorridor(PodDirection localDirection)
         {
-            // TODO: Ask pod widget if the pod in the adjacent direction exists and if it does if the corresponding panel is a corridor.
-            throw new System.NotImplementedException();
-            return false;
+            return !podWidget.AdjacentWallIsCorridor(localDirection);
         }
 
         private void SetVisibleCornerType(PodCornerType type)
