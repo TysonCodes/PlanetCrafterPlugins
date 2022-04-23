@@ -101,6 +101,10 @@ namespace OpenInteriorSpaces_Plugin
             UpdateWall(PodDirection.PodFront);
             UpdateWall(PodDirection.PodRight);
             UpdateWall(PodDirection.PodBack);
+            foreach (var corner in podCornerByLocalDirection)
+            {
+                corner.UpdateDisplay();
+            }
         }
 
         private void UpdateWall(PodDirection podDirection)

@@ -39,15 +39,6 @@ namespace OpenInteriorSpaces_Plugin
 
         public void SetAssociatedPillar(PillarInfo pillarInfo)
         {
-            if (associatedPillar != null)
-            {
-                associatedPillar.IsInteriorChanged -= UpdateDisplay;
-            }
-
-            if (pillarInfo != null)
-            {
-                pillarInfo.IsInteriorChanged += UpdateDisplay;
-            }
             associatedPillar = pillarInfo;
         }
 
