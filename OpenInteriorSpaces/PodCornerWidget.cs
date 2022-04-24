@@ -75,17 +75,17 @@ namespace OpenInteriorSpaces_Plugin
                 else if (CWIsCorridor())
                 {
                     newCornerType = PodCornerType.PCT_Wall_CW;
-                    if (AdjacentWallIsNotCorridor(directionOfWallCCW))
+                    if (AdjacentWallIsNotCorridor(directionOfWallCW))
                     {
-                        blockerForWallCW.SetActive(false);
+                        blockerForWallCW.SetActive(true);
                     }
                 }
                 else if (CCWIsCorridor())
                 {
                     newCornerType = PodCornerType.PCT_Wall_CCW;
-                    if (AdjacentWallIsNotCorridor(directionOfWallCW))
+                    if (AdjacentWallIsNotCorridor(directionOfWallCCW))
                     {
-                        blockerForWallCCW.SetActive(false);
+                        blockerForWallCCW.SetActive(true);
                     }
                 }
             }
@@ -296,8 +296,8 @@ namespace OpenInteriorSpaces_Plugin
 
             cornerWidget.blockerForWallCCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
             cornerWidget.blockerForWallCCW.transform.SetParent(podCornerContainerTransform, false);
-            cornerWidget.blockerForWallCCW.transform.localPosition = new Vector3(-1.0f, 0.5f, 2.0f);
-            cornerWidget.blockerForWallCCW.transform.localEulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
+            cornerWidget.blockerForWallCCW.transform.localPosition = new Vector3(-0.5f, 1.0f, 2.0f);
+            cornerWidget.blockerForWallCCW.transform.localEulerAngles = new Vector3(-90.0f, -90.0f, 0.0f);
             cornerWidget.blockerForWallCCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
             cornerWidget.blockerForWallCCW.SetActive(false);
         }

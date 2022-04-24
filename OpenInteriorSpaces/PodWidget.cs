@@ -36,16 +36,17 @@ namespace OpenInteriorSpaces_Plugin
         private PodRotation rotation;
         private bool initialized = false;
         private Dictionary<PodDirection, Panel> panelByGlobalDirection = new Dictionary<PodDirection, Panel>();
+        private Dictionary<Panel, PodDirection> globalDirectionByPanel = new Dictionary<Panel, PodDirection>();
         private Dictionary<PodDirection, PodWidget> podByGlobalDirection = new Dictionary<PodDirection, PodWidget>();
         private Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
 
         public bool AdjacentWallIsCorridor(PodDirection localDirection)
         {
             PodDirection globalDirection = CalculateRotatedPodDirection(localDirection, rotation);
-            if (podByGlobalDirection.TryGetValue(globalDirection, out PodWidget adjacentPod))
+            Panel adjacentWall = AdjacentWall(globalDirection);
+            if (adjacentWall != null)
             {
-                PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(globalDirection, PodRotation.Half);
-                return (adjacentPod.panelByGlobalDirection[flippedGlobalDirection].subPanelType == DataConfig.BuildPanelSubType.WallCorridor);
+                return (adjacentWall.subPanelType == DataConfig.BuildPanelSubType.WallCorridor);
             }
             return false;
         }
@@ -84,6 +85,7 @@ namespace OpenInteriorSpaces_Plugin
             }
             pillarsByGlobalDirection.Clear();
             panelByGlobalDirection.Clear();
+            globalDirectionByPanel.Clear();
             podByGlobalDirection.Clear();
             foreach (var corner in podCornerByLocalDirection)
             {
@@ -108,6 +110,29 @@ namespace OpenInteriorSpaces_Plugin
             {
                 corner.UpdateDisplay();
             }
+        }
+
+        public void RefreshAdjacentPodIfApplicable(Panel panelChanged)
+        {
+            if (globalDirectionByPanel.ContainsKey(panelChanged))
+            {
+                PodDirection adjacentPodDirection = globalDirectionByPanel[panelChanged];
+                Panel adjacentWall = AdjacentWall(adjacentPodDirection);
+                if (adjacentWall != null && adjacentWall.subPanelType == DataConfig.BuildPanelSubType.WallCorridor)
+                {
+                    podByGlobalDirection[adjacentPodDirection].RefreshPodWallsAndCorners();
+                }
+            }
+        }
+
+        private Panel AdjacentWall(PodDirection globalDirection)
+        {
+            if (podByGlobalDirection.TryGetValue(globalDirection, out PodWidget adjacentPod))
+            {
+                PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(globalDirection, PodRotation.Half);
+                return adjacentPod.panelByGlobalDirection[flippedGlobalDirection];
+            }
+            return null;
         }
 
         private void UpdateWall(PodDirection podDirection)
@@ -155,7 +180,9 @@ namespace OpenInteriorSpaces_Plugin
             foreach (PodDirection localDirection in Enum.GetValues(typeof(PodDirection)))
             {
                 PodDirection globalDirection = CalculateRotatedPodDirection(localDirection, rotation);
-                panelByGlobalDirection[globalDirection] = panelByLocalDirection[(int) localDirection];
+                Panel curPanel = panelByLocalDirection[(int)localDirection];
+                panelByGlobalDirection[globalDirection] = curPanel;
+                globalDirectionByPanel[curPanel] = globalDirection;
             }
         }
 
