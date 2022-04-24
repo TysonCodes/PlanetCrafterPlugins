@@ -34,6 +34,7 @@ namespace OpenInteriorSpaces_Plugin
         private WorldObject associatedWorldObj;
         private Vector3Int position;
         private PodRotation rotation;
+        private bool initialized = false;
         private Dictionary<PodDirection, Panel> panelByGlobalDirection = new Dictionary<PodDirection, Panel>();
         private Dictionary<PodDirection, PodWidget> podByGlobalDirection = new Dictionary<PodDirection, PodWidget>();
         private Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
@@ -61,6 +62,7 @@ namespace OpenInteriorSpaces_Plugin
 
             CalculatePanelDirections();
             DetectAdjacentPods();
+            initialized = true;
             GeneratePillarInfo();
         }
 
@@ -92,11 +94,12 @@ namespace OpenInteriorSpaces_Plugin
         private void DetatchFromPillar(PillarInfo pillar)
         {
             pillar.RemoveBorderingPod(this);
-            pillar.IsInteriorChanged -= OnPillarInteriorChanged;
+            pillar.IsInteriorChanged -= RefreshPodWallsAndCorners;
         }
 
-        private void OnPillarInteriorChanged()
+        public void RefreshPodWallsAndCorners()
         {
+            if (!initialized) {return;}
             UpdateWall(PodDirection.PodLeft);
             UpdateWall(PodDirection.PodFront);
             UpdateWall(PodDirection.PodRight);
@@ -114,11 +117,11 @@ namespace OpenInteriorSpaces_Plugin
             bool leftPillarInside = pillarsByGlobalDirection[leftPillarDirection].IsInterior;
             bool rightPillarInside = pillarsByGlobalDirection[rightPillarDirection].IsInterior;
             Panel podDirectionPanel = panelByGlobalDirection[podDirection];
-            Plugin.bepInExLogger.LogDebug($"UpdateWall {podDirection} for pod: {associatedWorldObj.GetId()}");
+            //Plugin.bepInExLogger.LogDebug($"UpdateWall {podDirection} for pod: {associatedWorldObj.GetId()}");
             if (podDirectionPanel.subPanelType == DataConfig.BuildPanelSubType.WallCorridor)
             {
-                CorridorWallWidget widget = podDirectionPanel.GetComponentInChildren<CorridorWallWidget>();
-                if (widget == null)
+                var allWidgets = podDirectionPanel.GetComponentsInChildren<CorridorWallWidget>();
+                if (allWidgets.Length == 0)
                 {
                     Plugin.bepInExLogger.LogError("Unable to get a CorridorWallWidget for a corridor.");
                     return;
@@ -126,12 +129,18 @@ namespace OpenInteriorSpaces_Plugin
                 if (leftPillarInside || rightPillarInside)
                 {
                     Plugin.bepInExLogger.LogDebug($"\tChanging corridor to interior for pod: {associatedWorldObj.GetId()}, direction: {podDirection}");
-                    widget.ShowInteriorWall();
+                    foreach (var widget in allWidgets)
+                    {
+                        widget.ShowInteriorWall();
+                    }
                 }
                 else
                 {
                     Plugin.bepInExLogger.LogDebug($"\tChanging corridor to original for pod: {associatedWorldObj.GetId()}, direction: {podDirection}");
-                    widget.ShowOriginalWall();
+                    foreach (var widget in allWidgets)
+                    {
+                        widget.ShowOriginalWall();
+                    }
                 }
             }
         }
@@ -175,7 +184,7 @@ namespace OpenInteriorSpaces_Plugin
                 PillarInfo curPillar = PillarInfo.GetPillarAtLocation(position, globalDirection);
                 podCornerByLocalDirection[(int) localDirection].Initialize();
                 podCornerByLocalDirection[(int) localDirection].SetAssociatedPillar(curPillar);
-                curPillar.IsInteriorChanged += OnPillarInteriorChanged;
+                curPillar.IsInteriorChanged += RefreshPodWallsAndCorners;
                 pillarsByGlobalDirection[globalDirection] = curPillar;
             }
             foreach (var pillar in pillarsByGlobalDirection)

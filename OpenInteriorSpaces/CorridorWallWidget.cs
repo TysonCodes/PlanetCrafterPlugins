@@ -87,6 +87,8 @@ namespace OpenInteriorSpaces_Plugin
             ceilingGO.transform.localPosition = new Vector3(0.0f, 4.0f, 0.0f);
             ceilingGO.transform.localEulerAngles = new Vector3(180.0f, 90.0f, 0.0f);
             ceilingGO.transform.localScale = new Vector3(1.0f, 1.0f, 0.5f);
+
+            interiorCorridorWallAndCollidersOnPrefab.SetActive(false);
         }
 
         private void SetOriginalWallAndColliderEnabled(bool enabled)

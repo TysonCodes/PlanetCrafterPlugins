@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using HarmonyLib;
 using MijuTools;
 using SpaceCraft;
 using UnityEngine;
@@ -18,6 +19,8 @@ namespace OpenInteriorSpaces_Plugin
 
         private const string POD_GAME_OBJECT_NAME = "Pod";
 
+        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+
         private void Awake()
         {
             bepInExLogger = Logger;
@@ -26,7 +29,20 @@ namespace OpenInteriorSpaces_Plugin
             Framework.WorldObjectInstantiated += OnWorldObjectBeingInstantiated;
             Framework.WorldObjectBeingDestroyed += OnWorldObjectBeingDestroyed;
 
+            harmony.PatchAll(typeof(OpenInteriorSpaces_Plugin.Plugin));
+
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Panel), "SetPanel")]
+        private static void Panel_SetPanel_Postfix(Panel __instance)
+        {
+            PodWidget pod = __instance.GetComponentInParent<PodWidget>();
+            if (pod != null)
+            {
+                pod.RefreshPodWallsAndCorners();
+            }
         }
 
         private void OnWorldObjectBeingInstantiated(ref WorldObject worldObject, ref GameObject gameObject, bool fromSaveFile)
@@ -72,6 +88,11 @@ namespace OpenInteriorSpaces_Plugin
             {
                 PodWidget.InjectWidgetIntoPodPrefab();
             }
+        }
+
+        private void OnDestroy()
+        {
+            harmony.UnpatchSelf();
         }
     }
 }
