@@ -6,9 +6,7 @@ using UnityEngine;
 
 namespace OpenInteriorSpaces_Plugin
 {
-    // TODO: What is the minimum scope for these?
     public enum PodDirection {PodFront, PodRight, PodBack, PodLeft};    // Local +Z, +X, -Z, -X
-    public enum PodRotation {None, CW_Quarter, Half, CCW_Quarter};
     public enum PillarDirection { PillarFrontLeft, PillarFrontRight, PillarBackRight, PillarBackLeft};
     public delegate void Trigger();
 

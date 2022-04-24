@@ -12,6 +12,7 @@ namespace OpenInteriorSpaces_Plugin
         public Panel[] panelByLocalDirection;
         public PodCornerWidget[] podCornerByLocalDirection;
 
+        private enum PodRotation { None, CW_Quarter, Half, CCW_Quarter };
         private const string POD_GAME_OBJECT_NAME = "Pod";
         private const float DETECT_DISTANCE = 2.0f;
         private const int POD_SPACING = 80;
