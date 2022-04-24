@@ -233,9 +233,28 @@ namespace OpenInteriorSpaces_Plugin
 
         private static void CreateInvertedCornerGameObject(Transform podCornerContainerTransform, ref PodCornerWidget cornerWidget)
         {
-            cornerWidget.invertedCorner = Object.Instantiate(cornerWidget.innerCorner, podCornerContainerTransform);
+            cornerWidget.invertedCorner = new GameObject("InvertedCorner");
+            cornerWidget.invertedCorner.transform.SetParent(podCornerContainerTransform, false);
             cornerWidget.invertedCorner.transform.localPosition = new Vector3(-1.0f, 1.0f, 0.0f);
             cornerWidget.invertedCorner.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 180.0f);
+
+            // Build mesh from code.
+            Mesh invertedCornerMesh = new Mesh();
+            invertedCornerMesh.subMeshCount = InvertedCornerMeshData.subMeshCount;
+            invertedCornerMesh.vertices = InvertedCornerMeshData.vertices;
+            invertedCornerMesh.normals = InvertedCornerMeshData.normals;
+            invertedCornerMesh.uv = InvertedCornerMeshData.uv;
+            for (int i = 0; i < InvertedCornerMeshData.subMeshCount; i++)
+            {
+                invertedCornerMesh.SetTriangles(InvertedCornerMeshData.subMeshVertices[i], i);
+            }
+
+            // Add  mesh and renderer to the gameobject. Use materials from original inner corner.
+            MeshFilter invertedCornerMeshFilter = cornerWidget.invertedCorner.AddComponent<MeshFilter>();
+            MeshRenderer invertedCornerMeshRenderer = cornerWidget.invertedCorner.AddComponent<MeshRenderer>();
+            invertedCornerMeshRenderer.materials = cornerWidget.innerCorner.GetComponent<MeshRenderer>().materials;
+            invertedCornerMeshFilter.mesh = invertedCornerMesh;
+
             cornerWidget.invertedCorner.SetActive(false);
         }
 
