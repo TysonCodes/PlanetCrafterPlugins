@@ -40,17 +40,6 @@ namespace OpenInteriorSpaces_Plugin
         private Dictionary<PodDirection, PodWidget> podByGlobalDirection = new Dictionary<PodDirection, PodWidget>();
         private Dictionary<PillarDirection, PillarInfo> pillarsByGlobalDirection = new Dictionary<PillarDirection, PillarInfo>();
 
-        public bool AdjacentWallIsCorridor(PodDirection localDirection)
-        {
-            PodDirection globalDirection = CalculateRotatedPodDirection(localDirection, rotation);
-            Panel adjacentWall = AdjacentWall(globalDirection);
-            if (adjacentWall != null)
-            {
-                return (adjacentWall.subPanelType == DataConfig.BuildPanelSubType.WallCorridor);
-            }
-            return false;
-        }
-
         public void Initialize()
         {
             // Called after WorldObjectsHandler.InstantiateWorldObject so all components exist and corridors have been determined.
@@ -93,6 +82,12 @@ namespace OpenInteriorSpaces_Plugin
             }
         }
 
+        public bool PodExists(PodDirection localDirection)
+        {
+            PodDirection globalDirection = CalculateRotatedPodDirection(localDirection, rotation);
+            return podByGlobalDirection.ContainsKey(globalDirection);
+        }
+
         private void DetatchFromPillar(PillarInfo pillar)
         {
             pillar.RemoveBorderingPod(this);
@@ -110,29 +105,6 @@ namespace OpenInteriorSpaces_Plugin
             {
                 corner.UpdateDisplay();
             }
-        }
-
-        public void RefreshAdjacentPodIfApplicable(Panel panelChanged)
-        {
-            if (globalDirectionByPanel.ContainsKey(panelChanged))
-            {
-                PodDirection adjacentPodDirection = globalDirectionByPanel[panelChanged];
-                Panel adjacentWall = AdjacentWall(adjacentPodDirection);
-                if (adjacentWall != null && adjacentWall.subPanelType == DataConfig.BuildPanelSubType.WallCorridor)
-                {
-                    podByGlobalDirection[adjacentPodDirection].RefreshPodWallsAndCorners();
-                }
-            }
-        }
-
-        private Panel AdjacentWall(PodDirection globalDirection)
-        {
-            if (podByGlobalDirection.TryGetValue(globalDirection, out PodWidget adjacentPod))
-            {
-                PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(globalDirection, PodRotation.Half);
-                return adjacentPod.panelByGlobalDirection[flippedGlobalDirection];
-            }
-            return null;
         }
 
         private void UpdateWall(PodDirection podDirection)

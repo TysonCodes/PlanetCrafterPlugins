@@ -42,7 +42,6 @@ namespace OpenInteriorSpaces_Plugin
             if (pod != null)
             {
                 pod.RefreshPodWallsAndCorners();
-                pod.RefreshAdjacentPodIfApplicable(__instance);
             }
         }
 

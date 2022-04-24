@@ -44,7 +44,6 @@ namespace OpenInteriorSpaces_Plugin
 
         public void UpdateDisplay()
         {
-            // TODO: How do I know if an interior wall changes?
             if (associatedPillar == null)
             {
                 return;
@@ -75,22 +74,24 @@ namespace OpenInteriorSpaces_Plugin
                 else if (CWIsCorridor())
                 {
                     newCornerType = PodCornerType.PCT_Wall_CW;
-                    if (AdjacentWallIsNotCorridor(directionOfWallCW))
-                    {
-                        blockerForWallCW.SetActive(true);
-                    }
                 }
                 else if (CCWIsCorridor())
                 {
                     newCornerType = PodCornerType.PCT_Wall_CCW;
-                    if (AdjacentWallIsNotCorridor(directionOfWallCCW))
-                    {
-                        blockerForWallCCW.SetActive(true);
-                    }
                 }
+            }
+            if (newCornerType == PodCornerType.PCT_InnerAngle && AdjacentPodExists())
+            {
+                blockerForWallCCW.SetActive(true);
+                blockerForWallCW.SetActive(true);
             }
             Plugin.bepInExLogger.LogDebug($"Updating pillar at {originalCorner.transform.position} to {newCornerType}");
             SetVisibleCornerType(newCornerType);
+        }
+
+        private bool AdjacentPodExists()
+        {
+            return podWidget.PodExists(directionOfWallCW) || podWidget.PodExists(directionOfWallCCW);
         }
 
         private bool BothWallsAreCorridors()
@@ -106,11 +107,6 @@ namespace OpenInteriorSpaces_Plugin
         private bool CCWIsCorridor()
         {
             return wallFromPillarCCW.subPanelType == DataConfig.BuildPanelSubType.WallCorridor;
-        }
-
-        private bool AdjacentWallIsNotCorridor(PodDirection localDirection)
-        {
-            return !podWidget.AdjacentWallIsCorridor(localDirection);
         }
 
         private void SetVisibleCornerType(PodCornerType type)
@@ -290,14 +286,14 @@ namespace OpenInteriorSpaces_Plugin
             cornerWidget.blockerForWallCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
             cornerWidget.blockerForWallCW.transform.SetParent(podCornerContainerTransform, false);
             cornerWidget.blockerForWallCW.transform.localPosition = new Vector3(-1.0f, 0.5f, 2.0f);
-            cornerWidget.blockerForWallCW.transform.localEulerAngles = new Vector3(0.0f, -90.0f, 0.0f);
+            cornerWidget.blockerForWallCW.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
             cornerWidget.blockerForWallCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
             cornerWidget.blockerForWallCW.SetActive(false);
 
             cornerWidget.blockerForWallCCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
             cornerWidget.blockerForWallCCW.transform.SetParent(podCornerContainerTransform, false);
             cornerWidget.blockerForWallCCW.transform.localPosition = new Vector3(-0.5f, 1.0f, 2.0f);
-            cornerWidget.blockerForWallCCW.transform.localEulerAngles = new Vector3(-90.0f, -90.0f, 0.0f);
+            cornerWidget.blockerForWallCCW.transform.localEulerAngles = new Vector3(90.0f, -90.0f, 0.0f);
             cornerWidget.blockerForWallCCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
             cornerWidget.blockerForWallCCW.SetActive(false);
         }
