@@ -9,14 +9,13 @@ namespace OpenInteriorSpaces_Plugin
         enum PodCornerType {PCT_InnerAngle, PCT_OuterAngle, PCT_InteriorEmtpy, PCT_InteriorPillar, PCT_Wall_CW, PCT_Wall_CCW};
 
         // Objects at this corner to turn on/of depending on situation
-        public GameObject originalCorner;
+        public GameObject innerCorner;
         public GameObject invertedCorner;
         public GameObject topBottomCorner;
         public GameObject solidPillarCorner;
         public GameObject wallCW;
         public GameObject wallCCW;
-        public GameObject blockerForWallCW;
-        public GameObject blockerForWallCCW;
+        public GameObject innerCornerBlockers;
 
         // Situational awareness for pillar to determine what to turn on/off
         public PodWidget podWidget;
@@ -50,8 +49,7 @@ namespace OpenInteriorSpaces_Plugin
             }
 
             PodCornerType newCornerType = PodCornerType.PCT_InnerAngle;
-            blockerForWallCW.SetActive(false);
-            blockerForWallCCW.SetActive(false);
+            innerCornerBlockers.SetActive(false);
             if (associatedPillar.IsInterior)
             {
                 if (BothWallsAreCorridors())
@@ -82,10 +80,9 @@ namespace OpenInteriorSpaces_Plugin
             }
             if (newCornerType == PodCornerType.PCT_InnerAngle && AdjacentPodExists())
             {
-                blockerForWallCCW.SetActive(true);
-                blockerForWallCW.SetActive(true);
+                innerCornerBlockers.SetActive(true);
             }
-            Plugin.bepInExLogger.LogDebug($"Updating pillar at {originalCorner.transform.position} to {newCornerType}");
+            Plugin.bepInExLogger.LogDebug($"Updating pillar at {innerCorner.transform.position} to {newCornerType}");
             SetVisibleCornerType(newCornerType);
         }
 
@@ -115,7 +112,7 @@ namespace OpenInteriorSpaces_Plugin
             switch(type)
             {
                 case PodCornerType.PCT_InnerAngle:
-                    originalCorner.SetActive(true);
+                    innerCorner.SetActive(true);
                     break;
                 case PodCornerType.PCT_OuterAngle:
                     invertedCorner.SetActive(true);
@@ -140,7 +137,7 @@ namespace OpenInteriorSpaces_Plugin
 
         private void HideAllCornerTypes()
         {
-            originalCorner.SetActive(false);
+            innerCorner.SetActive(false);
             invertedCorner.SetActive(false);
             topBottomCorner.SetActive(false);
             solidPillarCorner.SetActive(false);
@@ -174,7 +171,7 @@ namespace OpenInteriorSpaces_Plugin
             GameObject podCornerContainer = new GameObject("PodCorner");
             podCornerContainer.transform.SetParent(originalPillar.transform, false);
             PodCornerWidget result = podCornerContainer.AddComponent<PodCornerWidget>();
-            result.originalCorner = originalPillar;
+            result.innerCorner = originalPillar;
             result.directionOfWallCW = wallCWDirection;
             result.directionOfWallCCW = wallCCWDirection;
             result.podWidget = podWidget;
@@ -236,7 +233,7 @@ namespace OpenInteriorSpaces_Plugin
 
         private static void CreateInvertedCornerGameObject(Transform podCornerContainerTransform, ref PodCornerWidget cornerWidget)
         {
-            cornerWidget.invertedCorner = Object.Instantiate(cornerWidget.originalCorner, podCornerContainerTransform);
+            cornerWidget.invertedCorner = Object.Instantiate(cornerWidget.innerCorner, podCornerContainerTransform);
             cornerWidget.invertedCorner.transform.localPosition = new Vector3(-1.0f, 1.0f, 0.0f);
             cornerWidget.invertedCorner.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 180.0f);
             cornerWidget.invertedCorner.SetActive(false);
@@ -283,19 +280,22 @@ namespace OpenInteriorSpaces_Plugin
 
         private static void CreateWallBlockerGameObjects(Transform podCornerContainerTransform, ref PodCornerWidget cornerWidget)
         {
-            cornerWidget.blockerForWallCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            cornerWidget.blockerForWallCW.transform.SetParent(podCornerContainerTransform, false);
-            cornerWidget.blockerForWallCW.transform.localPosition = new Vector3(-1.0f, 0.5f, 2.0f);
-            cornerWidget.blockerForWallCW.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
-            cornerWidget.blockerForWallCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
-            cornerWidget.blockerForWallCW.SetActive(false);
+            cornerWidget.innerCornerBlockers = new GameObject("InnerBlockers");
+            cornerWidget.innerCornerBlockers.transform.SetParent(podCornerContainerTransform, false);
 
-            cornerWidget.blockerForWallCCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            cornerWidget.blockerForWallCCW.transform.SetParent(podCornerContainerTransform, false);
-            cornerWidget.blockerForWallCCW.transform.localPosition = new Vector3(-0.5f, 1.0f, 2.0f);
-            cornerWidget.blockerForWallCCW.transform.localEulerAngles = new Vector3(90.0f, -90.0f, 0.0f);
-            cornerWidget.blockerForWallCCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
-            cornerWidget.blockerForWallCCW.SetActive(false);
+            GameObject blockerForWallCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            blockerForWallCW.transform.SetParent(cornerWidget.innerCornerBlockers.transform, false);
+            blockerForWallCW.transform.localPosition = new Vector3(-1.0f, 0.5f, 2.0f);
+            blockerForWallCW.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
+            blockerForWallCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
+
+            GameObject blockerForWallCCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            blockerForWallCCW.transform.SetParent(cornerWidget.innerCornerBlockers.transform, false);
+            blockerForWallCCW.transform.localPosition = new Vector3(-0.5f, 1.0f, 2.0f);
+            blockerForWallCCW.transform.localEulerAngles = new Vector3(90.0f, -90.0f, 0.0f);
+            blockerForWallCCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
+
+            cornerWidget.innerCornerBlockers.SetActive(false);
         }
         #endregion
     }
