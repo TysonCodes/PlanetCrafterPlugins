@@ -49,4 +49,47 @@ namespace OpenInteriorSpaces_Plugin
             new int[48] { 16, 17, 18, 17, 16, 19, 20, 19, 16, 19, 20, 21, 22, 21, 20, 21, 22, 23, 24, 23, 22, 23, 24, 25, 26, 25, 24, 25, 26,
                 27, 28, 27, 26, 27, 28, 29, 30, 31, 32, 30, 32, 33, 34, 35, 36, 34, 36, 37 }};
     }
+
+    internal class PillarMeshData
+    {
+        internal static Vector3[] vertices = new Vector3[20] {
+            new Vector3(-1f, 2f, 4.000001f), new Vector3(-1f, 2f, -1.421085E-14f), new Vector3(-1f, -5.526975E-07f, 4.000001f),
+            new Vector3(-1f, -2.384186E-07f, -1.421085E-14f), new Vector3(0f, 2.384186E-07f, -7.105427E-15f), new Vector3(0f, 2f, -7.105427E-15f),
+            new Vector3(1.88748E-07f, 2f, 4.000001f), new Vector3(-2.185503E-07f, -4.479379E-07f, 4f), new Vector3(1.88748E-07f, 2f, 4.000001f),
+            new Vector3(-1f, 2f, 4.000001f), new Vector3(-2.185503E-07f, -4.479379E-07f, 4f), new Vector3(-1f, -5.526975E-07f, 4.000001f),
+            new Vector3(-1f, -5.526975E-07f, 4.000001f), new Vector3(-1f, 2f, 4.000001f), new Vector3(-1f, 2f, -1.421085E-14f),
+            new Vector3(-1f, -2.384186E-07f, -1.421085E-14f), new Vector3(1.88748E-07f, 2f, 4.000001f), new Vector3(-2.185503E-07f, -4.479379E-07f, 4f),
+            new Vector3(0f, 2f, -7.105427E-15f), new Vector3(0f, 2.384186E-07f, -7.105427E-15f)};
+
+        internal static Vector3[] normals = new Vector3[20] {
+            new Vector3(0f, 0f, 1f), new Vector3(0f, 1f, 0f), new Vector3(0f, 0f, 1f),
+            new Vector3(0f, -1f, 0f), new Vector3(0f, -1f, 0f), new Vector3(0f, 1f, 0f),
+            new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 1f), new Vector3(0f, 1f, 0f),
+            new Vector3(0f, 1f, 0f), new Vector3(0f, -1f, 0f), new Vector3(0f, -1f, 0f),
+            new Vector3(-1f, 0f, 0f), new Vector3(-1f, 0f, 0f), new Vector3(-1f, 0f, 0f),
+            new Vector3(-1f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(1f, 0f, 0f),
+            new Vector3(1f, 0f, 0f), new Vector3(1f, 0f, 0f)};
+
+        internal static Vector2[] uv = new Vector2[20] {
+            new Vector2(0.0134098f, 0.2573538f), new Vector2(0.500058f, 0.2643851f), new Vector2(0.2487149f, 0.2573539f),
+            new Vector2(0.500058f, 0.2643851f), new Vector2(0.500058f, 0.3821107f), new Vector2(0.500058f, 0.3821107f),
+            new Vector2(0.0134098f, 0.1841153f), new Vector2(0.2487149f, 0.1841154f), new Vector2(0.01276613f, 0.3821108f),
+            new Vector2(0.01276613f, 0.2643851f), new Vector2(0.01276613f, 0.3821108f), new Vector2(0.01276613f, 0.2643851f),
+            new Vector2(0.5065523f, 0.964283f), new Vector2(0.7493418f, 0.964283f), new Vector2(0.749342f, 0.5366828f),
+            new Vector2(0.5065525f, 0.5366828f), new Vector2(0.7493418f, 0.9932168f), new Vector2(0.5065523f, 0.9932168f),
+            new Vector2(0.749342f, 0.5079712f), new Vector2(0.5065525f, 0.5079712f)};
+
+        internal static Vector2[] uv2 = new Vector2[20] {
+            new Vector2(0.6570211f, 0.003906387f), new Vector2(0.00390625f, 0.3324168f), new Vector2(0.9816254f, 0.00390625f),
+            new Vector2(0.6531147f, 0.8271357f), new Vector2(0.6531143f, 0.9894379f), new Vector2(0.003906281f, 0.494719f),
+            new Vector2(0.6570212f, 0.1662084f), new Vector2(0.9816255f, 0.1662083f), new Vector2(0.6531148f, 0.4947189f),
+            new Vector2(0.6531148f, 0.3324169f), new Vector2(0.00390625f, 0.9894378f), new Vector2(0.003906656f, 0.8271357f),
+            new Vector2(0.6531149f, 0.00390625f), new Vector2(0.6531144f, 0.3285105f), new Vector2(0.00390625f, 0.3285106f),
+            new Vector2(0.003906757f, 0.003906279f), new Vector2(0.00390625f, 0.8232293f), new Vector2(0.003906254f, 0.4986254f),
+            new Vector2(0.6531147f, 0.8232294f), new Vector2(0.6531147f, 0.4986252f)};
+
+        internal const int subMeshCount = 1;
+        internal static int[][] subMeshVertices = {
+           new int[30] {6, 0, 7, 0, 2, 7, 8, 5, 1, 1, 9, 8, 10, 11, 3, 3, 4, 10, 12, 13, 14, 14, 15, 12, 16, 17, 18, 17, 19, 18}};
+    }
 }

@@ -260,11 +260,30 @@ namespace OpenInteriorSpaces_Plugin
 
         private static void CreateSolidPillarGameObject(Transform podCornerContainerTransform, ref PodCornerWidget cornerWidget)
         {
-            cornerWidget.solidPillarCorner = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            cornerWidget.solidPillarCorner = new GameObject("InteriorPillar");
             cornerWidget.solidPillarCorner.transform.SetParent(podCornerContainerTransform, false);
-            cornerWidget.solidPillarCorner.transform.localPosition = new Vector3(-0.5f, 0.5f, 2.0f);
+            cornerWidget.solidPillarCorner.transform.localPosition = Vector3.zero;
             cornerWidget.solidPillarCorner.transform.localEulerAngles = Vector3.zero;
-            cornerWidget.solidPillarCorner.transform.localScale = new Vector3(1.0f, 1.0f, 4.0f);
+            cornerWidget.solidPillarCorner.transform.localScale = new Vector3(1.0f, 0.5f, 1.0f);
+
+            // Build mesh from code.
+            Mesh solidPillarMesh = new Mesh();
+            solidPillarMesh.subMeshCount = PillarMeshData.subMeshCount;
+            solidPillarMesh.vertices = PillarMeshData.vertices;
+            solidPillarMesh.normals = PillarMeshData.normals;
+            solidPillarMesh.uv = PillarMeshData.uv;
+            solidPillarMesh.uv2 = PillarMeshData.uv2;
+            for (int i = 0; i < PillarMeshData.subMeshCount; i++)
+            {
+                solidPillarMesh.SetTriangles(PillarMeshData.subMeshVertices[i], i);
+            }
+
+            // Add  mesh and renderer to the gameobject. Use materials from original inner corner.
+            MeshFilter pillarMeshFilter = cornerWidget.solidPillarCorner.AddComponent<MeshFilter>();
+            MeshRenderer pillarMeshRenderer = cornerWidget.solidPillarCorner.AddComponent<MeshRenderer>();
+            pillarMeshRenderer.material = cornerWidget.innerCorner.GetComponent<MeshRenderer>().materials[1];
+            pillarMeshFilter.mesh = solidPillarMesh;
+
             cornerWidget.solidPillarCorner.SetActive(false);
         }
 
