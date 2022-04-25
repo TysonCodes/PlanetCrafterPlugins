@@ -56,9 +56,9 @@ namespace OpenInteriorSpaces_Plugin
 
         private void OnWorldObjectBeingDestroyed(ref WorldObject worldObject)
         {
-            if (worldObject.GetGroup().GetId() == "pod" && gameObject.TryGetComponent<PodWidget>(out PodWidget pod))
+            if (worldObject.GetGroup().GetId() == "pod")
             {
-                pod.Remove();
+                PodWidget.RemovePod(worldObject.GetId());
             }
         }
 

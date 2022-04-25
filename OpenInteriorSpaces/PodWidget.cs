@@ -57,32 +57,6 @@ namespace OpenInteriorSpaces_Plugin
             GeneratePillarInfo();
         }
 
-        public void Remove()
-        {
-            podsByLocation.Remove(position);
-            podsByWorldId.Remove(associatedWorldObj.GetId());
-            foreach (var adjacentPod in podByGlobalDirection)
-            {
-                if (adjacentPod.Value != null)
-                {
-                    PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(adjacentPod.Key, PodRotation.Half);
-                    adjacentPod.Value.podByGlobalDirection.Remove(flippedGlobalDirection);
-                }
-            }
-            foreach (var pillar in pillarsByGlobalDirection)
-            {
-                DetatchFromPillar(pillar.Value);
-            }
-            pillarsByGlobalDirection.Clear();
-            panelByGlobalDirection.Clear();
-            globalDirectionByPanel.Clear();
-            podByGlobalDirection.Clear();
-            foreach (var corner in podCornerByLocalDirection)
-            {
-                corner.SetAssociatedPillar(null);
-            }
-        }
-
         public bool PodExists(PodDirection localDirection)
         {
             PodDirection globalDirection = CalculateRotatedPodDirection(localDirection, rotation);
@@ -91,8 +65,8 @@ namespace OpenInteriorSpaces_Plugin
 
         private void DetatchFromPillar(PillarInfo pillar)
         {
-            pillar.RemoveBorderingPod(this);
             pillar.IsInteriorChanged -= RefreshPodWallsAndCorners;
+            pillar.RemoveBorderingPod(this);
         }
 
         public void RefreshPodWallsAndCorners()
@@ -239,11 +213,47 @@ namespace OpenInteriorSpaces_Plugin
             return (PodDirection)newPodDirection;
         }
 
+        private void Remove()
+        {
+            Plugin.bepInExLogger.LogInfo($"Removing pod {associatedWorldObj.GetId()}");
+            podsByLocation.Remove(position);
+            podsByWorldId.Remove(associatedWorldObj.GetId());
+            foreach (var adjacentPod in podByGlobalDirection)
+            {
+                if (adjacentPod.Value != null)
+                {
+                    PodDirection flippedGlobalDirection = CalculateRotatedPodDirection(adjacentPod.Key, PodRotation.Half);
+                    adjacentPod.Value.podByGlobalDirection.Remove(flippedGlobalDirection);
+                }
+            }
+            foreach (var pillar in pillarsByGlobalDirection)
+            {
+                DetatchFromPillar(pillar.Value);
+            }
+            pillarsByGlobalDirection.Clear();
+            panelByGlobalDirection.Clear();
+            globalDirectionByPanel.Clear();
+            podByGlobalDirection.Clear();
+            foreach (var corner in podCornerByLocalDirection)
+            {
+                corner.SetAssociatedPillar(null);
+            }
+        }
+
         #region StaticMethods
         public static void Reset()
         {
             podsByLocation = new Dictionary<Vector3Int, PodWidget>();
             podsByWorldId = new Dictionary<int, PodWidget>();
+        }
+
+        public static void RemovePod(int worldObjectId)
+        {
+            if (podsByWorldId.ContainsKey(worldObjectId))
+            {
+                PodWidget widgetToRemove = podsByWorldId[worldObjectId];
+                widgetToRemove.Remove();
+            }
         }
 
         public static void InjectWidgetIntoPodPrefab()

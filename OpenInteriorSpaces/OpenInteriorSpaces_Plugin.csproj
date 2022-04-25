@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <Product>OpenInteriorSpaces</Product>
-    <Version>2.1.0</Version>
+    <Version>2.3.0</Version>
     <AssemblyName>Lathrey-$(Product)</AssemblyName>
     <Description>A plugin to remove interior pillars when building connected pods.</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
