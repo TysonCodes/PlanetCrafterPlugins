@@ -92,4 +92,36 @@ namespace OpenInteriorSpaces_Plugin
         internal static int[][] subMeshVertices = {
            new int[30] {6, 0, 7, 0, 2, 7, 8, 5, 1, 1, 9, 8, 10, 11, 3, 3, 4, 10, 12, 13, 14, 14, 15, 12, 16, 17, 18, 17, 19, 18}};
     }
+
+    internal class CornerBlockersMeshData
+    {
+        internal static Vector3[] vertices = new Vector3[16] {
+            new Vector3(0f, 6.516827E-07f, 4f), new Vector3(3.774895E-08f, 0f, 0f), new Vector3(-2.384979E-08f, 0.9999981f, 0f),
+            new Vector3(-3.774895E-08f, 1.000001f, 4f), new Vector3(0f, 6.516827E-07f, 4f), new Vector3(-1f, -0.0005435937f, 4f),
+            new Vector3(-0.999998f, 0f, 0f), new Vector3(3.774895E-08f, 0f, 0f), new Vector3(-0.999998f, 0f, 0f),
+            new Vector3(-1f, 0.9999981f, 0f), new Vector3(-2.384979E-08f, 0.9999981f, 0f), new Vector3(3.774895E-08f, 0f, 0f),
+            new Vector3(0f, 6.516827E-07f, 4f), new Vector3(-3.774895E-08f, 1.000001f, 4f), new Vector3(-1f, 1.000001f, 4f),
+            new Vector3(-1f, -0.0005435937f, 4f)};
+
+        internal static Vector3[] normals = new Vector3[16] {
+            new Vector3(1f, 0f, 0f), new Vector3(1f, 0f, 0f), new Vector3(1f, 0f, 0f),
+            new Vector3(1f, 0f, 0f), new Vector3(0.0005442454f, -0.9999999f, -0.0001358981f), new Vector3(0.0005442454f, -0.9999999f, -0.0001358981f),
+            new Vector3(0.0005442454f, -0.9999999f, -0.0001358981f), new Vector3(0f, -1f, 0f), new Vector3(0f, 0f, -1f),
+            new Vector3(0f, 0f, -1f), new Vector3(0f, 0f, -1f), new Vector3(0f, 0f, -1f),
+            new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 1f), new Vector3(0f, 0f, 1f),
+            new Vector3(0f, 0f, 1f)};
+
+        internal static Vector2[] uv = new Vector2[16] {
+            new Vector2(0.01394756f, 0.382663f), new Vector2(0.5002126f, 0.382663f), new Vector2(0.5002126f, 0.2638217f),
+            new Vector2(0.01394756f, 0.2638214f), new Vector2(0.01291911f, 0.2641495f), new Vector2(0.01291917f, 0.3818823f),
+            new Vector2(0.4998459f, 0.3818818f), new Vector2(0.4998459f, 0.2641495f), new Vector2(0.3242812f, 0.8886352f),
+            new Vector2(0.3242807f, 0.9928711f), new Vector2(0.4694726f, 0.9928711f), new Vector2(0.4694726f, 0.8886352f),
+            new Vector2(0.3245555f, 0.890021f), new Vector2(0.3245554f, 0.9931398f), new Vector2(0.4691421f, 0.9931399f),
+            new Vector2(0.4691421f, 0.8898849f)};
+
+        internal const int subMeshCount = 2;
+        internal static int[][] subMeshVertices = {
+            new int[12] {0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7},
+            new int[12] {8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15}};
+    }
 }

@@ -320,18 +320,29 @@ namespace OpenInteriorSpaces_Plugin
         {
             cornerWidget.innerCornerBlockers = new GameObject("InnerBlockers");
             cornerWidget.innerCornerBlockers.transform.SetParent(podCornerContainerTransform, false);
+            cornerWidget.innerCornerBlockers.transform.localPosition = new Vector3(-1.0f, 1.0f, 0.0f);
+            cornerWidget.innerCornerBlockers.transform.localEulerAngles = new Vector3(0.0f, 0.0f, 180.0f);
+            cornerWidget.innerCornerBlockers.transform.localScale = Vector3.one;
 
-            GameObject blockerForWallCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            blockerForWallCW.transform.SetParent(cornerWidget.innerCornerBlockers.transform, false);
-            blockerForWallCW.transform.localPosition = new Vector3(-1.0f, 0.5f, 2.0f);
-            blockerForWallCW.transform.localEulerAngles = new Vector3(0.0f, 90.0f, 0.0f);
-            blockerForWallCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
+            // Build mesh from code.
+            Mesh innerCornerBlockersMesh = new Mesh();
+            innerCornerBlockersMesh.subMeshCount = CornerBlockersMeshData.subMeshCount;
+            innerCornerBlockersMesh.vertices = CornerBlockersMeshData.vertices;
+            innerCornerBlockersMesh.normals = CornerBlockersMeshData.normals;
+            innerCornerBlockersMesh.uv = CornerBlockersMeshData.uv;
+            for (int i = 0; i < CornerBlockersMeshData.subMeshCount; i++)
+            {
+                innerCornerBlockersMesh.SetTriangles(CornerBlockersMeshData.subMeshVertices[i], i);
+            }
 
-            GameObject blockerForWallCCW = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            blockerForWallCCW.transform.SetParent(cornerWidget.innerCornerBlockers.transform, false);
-            blockerForWallCCW.transform.localPosition = new Vector3(-0.5f, 1.0f, 2.0f);
-            blockerForWallCCW.transform.localEulerAngles = new Vector3(90.0f, -90.0f, 0.0f);
-            blockerForWallCCW.transform.localScale = new Vector3(4.0f, 1.0f, 1.0f);
+            // Add  mesh and renderer to the gameobject. Use materials from original inner corner.
+            MeshFilter innerCornerBlockersMeshFilter = cornerWidget.innerCornerBlockers.AddComponent<MeshFilter>();
+            MeshRenderer innerCornerBlockersMeshRenderer = cornerWidget.innerCornerBlockers.AddComponent<MeshRenderer>();
+            Material [] swappedMaterials = new Material[2];
+            swappedMaterials[0] = cornerWidget.innerCorner.GetComponent<MeshRenderer>().materials[1];
+            swappedMaterials[1] = cornerWidget.innerCorner.GetComponent<MeshRenderer>().materials[0];
+            innerCornerBlockersMeshRenderer.materials = swappedMaterials;
+            innerCornerBlockersMeshFilter.mesh = innerCornerBlockersMesh;
 
             cornerWidget.innerCornerBlockers.SetActive(false);
         }
