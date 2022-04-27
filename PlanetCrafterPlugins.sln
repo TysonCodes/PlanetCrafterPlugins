@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PluginFramework", "PluginFr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DisableBuildConstraints_Plugin", "DisableBuildConstraints\DisableBuildConstraints_Plugin.csproj", "{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImprovePerformance_Plugin", "ImprovePerformance_Plugin\ImprovePerformance_Plugin.csproj", "{83F1E528-4386-4182-89E8-CE1C93C0C0E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,5 +80,9 @@ Global
 		{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13D9B7D9-1286-4DBE-97AD-3A3924246EA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83F1E528-4386-4182-89E8-CE1C93C0C0E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83F1E528-4386-4182-89E8-CE1C93C0C0E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83F1E528-4386-4182-89E8-CE1C93C0C0E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83F1E528-4386-4182-89E8-CE1C93C0C0E3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
