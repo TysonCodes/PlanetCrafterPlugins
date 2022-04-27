@@ -34,6 +34,18 @@ namespace OpenInteriorSpaces_Plugin
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Panel), "SetPanel")]
+        private static bool Panel_SetPanel_Prefix(ref Panel __instance)
+        {
+            if (__instance.subPanelType >= FIRST_CUSTOM_SUBTYPE)
+            {
+                __instance.subPanelType = DataConfig.BuildPanelSubType.WallCorridor;
+            }
+
+            return true;
+        }
+
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Panel), "SetPanel")]
         private static void Panel_SetPanel_Postfix(Panel __instance)

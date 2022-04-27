@@ -202,6 +202,32 @@ namespace OpenInteriorSpaces_Plugin
             cornerWidget.topBottomCorner = new GameObject("CeilingAndFloor");
             cornerWidget.topBottomCorner.transform.SetParent(podCornerContainerTransform, false);
 
+            // Create panel quad
+            GameObject panelQuadGO = new GameObject();
+            panelQuadGO.transform.SetParent(cornerWidget.topBottomCorner.transform, false);
+
+            // Build mesh from code.
+            Mesh panelQuadMesh = new Mesh();
+            panelQuadMesh.subMeshCount = PanelQuadMeshData.subMeshCount;
+            panelQuadMesh.vertices = PanelQuadMeshData.vertices;
+            panelQuadMesh.normals = PanelQuadMeshData.normals;
+            panelQuadMesh.uv = PanelQuadMeshData.uv;
+            for (int i = 0; i < PanelQuadMeshData.subMeshCount; i++)
+            {
+                panelQuadMesh.SetTriangles(PanelQuadMeshData.subMeshVertices[i], i);
+            }
+
+            // Add  mesh and renderer to the gameobject. Use materials from original inner corner.
+            MeshFilter panelQuadMeshFilter = panelQuadGO.AddComponent<MeshFilter>();
+            MeshRenderer panelQuadMeshRenderer = panelQuadGO.AddComponent<MeshRenderer>();
+            panelQuadMeshRenderer.material = cornerWidget.innerCorner.GetComponent<MeshRenderer>().materials[0];
+            panelQuadMeshFilter.mesh = panelQuadMesh;
+
+            // Duplicate panel quad for ceiling blocker
+            GameObject topPanelQuadGO = Object.Instantiate(panelQuadGO, cornerWidget.topBottomCorner.transform, false);
+            topPanelQuadGO.transform.localPosition = new Vector3(-1.0f, 0.0f, 4.0f);
+            topPanelQuadGO.transform.localEulerAngles = new Vector3(0.0f, 180.0f, 0.0f);
+
             // Floor
             GameObject floorGO = new GameObject("Floor");
             floorGO.transform.SetParent(cornerWidget.topBottomCorner.transform, false);
@@ -228,6 +254,8 @@ namespace OpenInteriorSpaces_Plugin
             ceilingGO.transform.localPosition = new Vector3(-1.0f, 1.0f, 4.0f);
             ceilingGO.transform.localEulerAngles = new Vector3(180.0f, -90.0f, 90.0f);
             ceilingGO.transform.localScale = new Vector3(0.169f, 1.0f, 0.5f);
+
+            // Hide by default
             cornerWidget.topBottomCorner.SetActive(false);
         }
 

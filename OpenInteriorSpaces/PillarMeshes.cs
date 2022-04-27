@@ -124,4 +124,21 @@ namespace OpenInteriorSpaces_Plugin
             new int[12] {0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7},
             new int[12] {8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15}};
     }
+
+    internal class PanelQuadMeshData
+    {
+        internal static Vector3[] vertices = new Vector3[4] {Vector3.left, Vector3.left + Vector3.up, Vector3.up, Vector3.zero};
+
+        internal static Vector3[] normals = new Vector3[4] {
+            new Vector3(0f, 0f, -1f), new Vector3(0f, 0f, -1f), new Vector3(0f, 0f, -1f),
+            new Vector3(0f, 0f, -1f)};
+
+        internal static Vector2[] uv = new Vector2[4] {
+            new Vector2(0.3242812f, 0.8886352f), new Vector2(0.3242807f, 0.9928711f), new Vector2(0.4694726f, 0.9928711f),
+            new Vector2(0.4694726f, 0.8886352f)};
+
+        internal const int subMeshCount = 1;
+        internal static int[][] subMeshVertices = {
+            new int[6] {0, 1, 2, 0, 2, 3}};
+    }
 }
