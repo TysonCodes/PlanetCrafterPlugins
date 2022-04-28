@@ -34,6 +34,9 @@
     <Reference Include="TextMeshPro">
       <HintPath>$(GameLibrariesFolder)Unity.TextMeshPro.dll</HintPath>
     </Reference>
+    <Reference Include="MijuTools">
+      <HintPath>$(GameLibrariesFolder)com.mijugames.miju-tools.dll</HintPath>
+    </Reference>
 </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">

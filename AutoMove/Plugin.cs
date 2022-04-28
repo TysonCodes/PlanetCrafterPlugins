@@ -43,10 +43,24 @@ namespace AutoMove_Plugin
         [HarmonyPatch(typeof(BaseHudHandler), "UpdateHud")]
         private static void BaseHudHandler_UpdateHud_Postfix(BaseHudHandler __instance)
         {
+            if (!CanMove())
+            {
+                return;
+            }
             if (autoMoveEnabled)
             {
                 __instance.textPositionDecoration.text += " - Auto Move";
             }
+        }
+
+        private static bool CanMove()
+        {
+            PlayersManager playersManager = Managers.GetManager<PlayersManager>();
+            if (playersManager != null)
+            {
+                return playersManager.GetActivePlayerController().GetPlayerCanAct();
+            }
+            return false;
         }
 
         private void Update()

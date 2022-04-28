@@ -4,6 +4,7 @@ using HarmonyLib;
 using SpaceCraft;
 using UnityEngine.InputSystem;
 using TMPro;
+using MijuTools;
 
 namespace DisableBuildConstraints_Plugin
 {
@@ -44,10 +45,24 @@ namespace DisableBuildConstraints_Plugin
         [HarmonyPatch(typeof(BaseHudHandler), "UpdateHud")]
         private static void BaseHudHandler_UpdateHud_Postfix(BaseHudHandler __instance)
         {
+            if (!CanMove())
+            {
+                return;
+            }
             if (constraintsDisabled)
             {
                 __instance.textPositionDecoration.text += " - No Build Constraints";
             }
+        }
+
+        private static bool CanMove()
+        {
+            PlayersManager playersManager = Managers.GetManager<PlayersManager>();
+            if (playersManager != null)
+            {
+                return playersManager.GetActivePlayerController().GetPlayerCanAct();
+            }
+            return false;
         }
 
         private void Update()
