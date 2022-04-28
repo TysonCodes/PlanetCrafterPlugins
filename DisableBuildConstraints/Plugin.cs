@@ -3,6 +3,7 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using SpaceCraft;
 using UnityEngine.InputSystem;
+using TMPro;
 
 namespace DisableBuildConstraints_Plugin
 {
@@ -36,6 +37,16 @@ namespace DisableBuildConstraints_Plugin
             if (constraintsDisabled)
             {
                 __result = true;
+            }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(BaseHudHandler), "UpdateHud")]
+        private static void BaseHudHandler_UpdateHud_Postfix(BaseHudHandler __instance)
+        {
+            if (constraintsDisabled)
+            {
+                __instance.textPositionDecoration.text += " - No Build Constraints";
             }
         }
 

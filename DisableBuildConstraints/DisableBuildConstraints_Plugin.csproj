@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net46</TargetFramework>
     <Product>DisableBuildConstraints</Product>
-    <Version>1.0.0</Version>
+    <Version>2.5.0</Version>
     <AssemblyName>Lathrey-$(Product)</AssemblyName>
     <Description>A plugin to disable building constraints.</Description>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -28,8 +28,11 @@
     <Reference Include="UnityUI">
       <HintPath>$(GameLibrariesFolder)UnityEngine.UI.dll</HintPath>
     </Reference>
-      <Reference Include="UnityInputSystem">
+    <Reference Include="UnityInputSystem">
       <HintPath>$(GameLibrariesFolder)Unity.InputSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="TextMeshPro">
+      <HintPath>$(GameLibrariesFolder)Unity.TextMeshPro.dll</HintPath>
     </Reference>
 </ItemGroup>
 
