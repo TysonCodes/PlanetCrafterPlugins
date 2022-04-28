@@ -60,7 +60,7 @@ namespace DisableBuildConstraints_Plugin
             PlayersManager playersManager = Managers.GetManager<PlayersManager>();
             if (playersManager != null)
             {
-                return playersManager.GetActivePlayerController().GetPlayerCanAct();
+                return playersManager.GetActivePlayerController().GetPlayerCanAct().GetCanMove();
             }
             return false;
         }
