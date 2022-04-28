@@ -66,7 +66,7 @@ namespace ImprovePerformance_Plugin
                 Light [] lights = currentGO.GetComponentsInChildren<Light>();
                 foreach (Light light in lights)
                 {
-                    light.enabled = false;
+                    light.gameObject.SetActive(false);
                 }
             }
         }
