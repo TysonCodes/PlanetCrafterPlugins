@@ -29,6 +29,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImprovePerformance_Plugin",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoMove_Plugin", "AutoMove\AutoMove_Plugin.csproj", "{B9B4B76B-4031-46CC-BF45-111741AC1096}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToggleFog_Plugin", "ToggleFog\ToggleFog_Plugin.csproj", "{75F4DCC1-2794-4260-8DB1-768BD161E264}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,5 +92,9 @@ Global
 		{B9B4B76B-4031-46CC-BF45-111741AC1096}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9B4B76B-4031-46CC-BF45-111741AC1096}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9B4B76B-4031-46CC-BF45-111741AC1096}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75F4DCC1-2794-4260-8DB1-768BD161E264}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75F4DCC1-2794-4260-8DB1-768BD161E264}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75F4DCC1-2794-4260-8DB1-768BD161E264}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75F4DCC1-2794-4260-8DB1-768BD161E264}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
