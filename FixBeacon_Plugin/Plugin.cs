@@ -39,6 +39,11 @@ namespace FixBeacon_Plugin
         private void AdjustBeaconIcon()
         {
             GameObject beacon = Framework.GameObjectByName["Beacon1"];
+            Transform canvasTransform = beacon.transform.Find("Canvas");
+            GameObject canvasLocation = new GameObject("CanvasLocation");
+            canvasLocation.transform.SetParent(beacon.transform, false);
+            canvasLocation.transform.localPosition = new Vector3(0.0f, 2.871f, 0.0f);
+            canvasTransform.SetParent(canvasLocation.transform, true);
         }
     }
 }
