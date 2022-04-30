@@ -1,49 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using BepInEx;
+﻿using BepInEx;
 using UnityEngine;
-using PluginFramework;
+using SpaceCraft;
+using HarmonyLib;
 
 namespace FixBeacon_Plugin
 {
-    [System.Serializable]
-    public class BuildingList
-    {
-        public List<string> buildingGameObjectNames;
-    }
-
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     [BepInProcess("Planet Crafter.exe")]
-    [BepInDependency(PluginFramework.PluginInfo.PLUGIN_GUID, PluginFramework.PluginInfo.PLUGIN_VERSION)]    // In BepInEx 5.4.x this ia a minimum version, BepInEx 6.x has range semantics.
     public class Plugin : BaseUnityPlugin
     {
+        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+
         private void Awake()
         {
-            Framework.StaticGroupDataIndexed += OnStaticGroupDataIndexed;
+            harmony.PatchAll(typeof(FixBeacon_Plugin.Plugin));
 
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         }
 
-        private void OnStaticGroupDataIndexed()
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(PlayerLookable), "SetFov")]
+        private static void PlayerLookable_SetFov_Postfix(Camera ___camera)
         {
-            try
+            if (___camera != null)
             {
-                AdjustBeaconIcon();
+                Camera childCamera = ___camera.transform.Find("CameraWorldUi").GetComponent<Camera>();
+                if (childCamera != null)
+                {
+                    childCamera.fieldOfView = ___camera.fieldOfView;
+                }
             }
-            catch (Exception ex)
-            {
-                Logger.LogError($"Caught exception '{ex.Message}' trying to adjust the beacon icon.");
-            }
-        }
-
-        private void AdjustBeaconIcon()
-        {
-            GameObject beacon = Framework.GameObjectByName["Beacon1"];
-            Transform canvasTransform = beacon.transform.Find("Canvas");
-            GameObject canvasLocation = new GameObject("CanvasLocation");
-            canvasLocation.transform.SetParent(beacon.transform, false);
-            canvasLocation.transform.localPosition = new Vector3(0.0f, 2.871f, 0.0f);
-            canvasTransform.SetParent(canvasLocation.transform, true);
         }
     }
 }
