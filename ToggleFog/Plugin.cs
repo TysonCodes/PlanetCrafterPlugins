@@ -4,6 +4,8 @@ using BepInEx.Configuration;
 using UnityEngine.InputSystem;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using SpaceCraft;
+using HarmonyLib;
 
 namespace ToggleFog_Plugin
 {
@@ -14,7 +16,9 @@ namespace ToggleFog_Plugin
         private ConfigEntry<Key> configToggleFogConstraintsModifierKey;
         private ConfigEntry<Key> configToggleFogConstraintsKey;
 
-        private bool showFog = true;
+        private readonly Harmony harmony = new Harmony(PluginInfo.PLUGIN_GUID);
+
+        private static bool showFog = true;
         private Dictionary<string, List<GameObject>> disabledParticleSystemsBySceneName = new Dictionary<string, List<GameObject>>();
 
         private static Dictionary<string, List<string>> objectsToDisable = new Dictionary<string, List<string>> 
@@ -33,7 +37,19 @@ namespace ToggleFog_Plugin
             SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
 
+            harmony.PatchAll(typeof(ToggleFog_Plugin.Plugin));
+
             Logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(PlayerParticles), "SetGroundDustStatus")]
+        private static void PlayerParticles_SetGroundDustStatus_Postfix(ref bool ___spawnDustOnGround)
+        {
+            if (!showFog)
+            {
+                ___spawnDustOnGround = false;
+            }
         }
 
         private void Update()
@@ -60,10 +76,12 @@ namespace ToggleFog_Plugin
             {
                 foreach (var gameObject in sceneObjects.Value)
                 {
-                    gameObject.SetActive(showFog);
+                    if (gameObject != null)
+                    {
+                        gameObject.SetActive(showFog);
+                    }
                 }
             }
-
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -89,10 +107,15 @@ namespace ToggleFog_Plugin
 
         private void OnSceneUnloaded(Scene scene)
         {
-            foreach (var gameObject in disabledParticleSystemsBySceneName[scene.name])
+            string sceneName = scene.name;
+            foreach (var gameObject in disabledParticleSystemsBySceneName[sceneName])
             {
-                gameObject.SetActive(true);
+                if (gameObject != null)
+                {
+                    gameObject.SetActive(true);
+                }
             }
+            disabledParticleSystemsBySceneName.Remove(sceneName);
         }
 
         private void OnDestroy()
