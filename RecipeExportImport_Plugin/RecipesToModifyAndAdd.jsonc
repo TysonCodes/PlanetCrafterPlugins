@@ -1,0 +1,122 @@
+{ /* A list of all the items/buildings to modify */
+    "Modifications" : {
+        /* For each one a set of name/value pairs that replace a built-in value with a new one. */
+        /* Note you need to specify an unlockingWorldUnit or you can't craft something. */
+        
+        /* 
+            Enumerations (numbers that mean things :))
+            ==========================================
+            
+            unlockingWorldUnit, worlUnitMultiplied
+                Null = 0,
+                Oxygen = 1,
+                Energy = 2,
+                Heat = 3,
+                Pressure = 4,
+                Terraformation = 5,
+                Biomass = 6   
+            
+            craftableInList
+                Null = 0,
+                CraftStationT1 = 1,
+                CraftStationT2 = 2,
+                CraftStationT3 = 3,
+                CraftRocket = 4,
+                CraftBioLab = 5,
+                CraftGeneticT1 = 6
+
+            equipableType
+                Null = 0,
+                OxygenTank = 1,
+                BackpackIncrease = 2,
+                EquipmentIncrease = 3,
+                MultiToolLight = 4,
+                MultiToolDeconstruct = 5,
+                MultiToolBuild = 6,
+                MultiToolMineSpeed = 7,
+                BootsSpeed = 8,
+                CompassHUD = 9,
+                Jetpack = 10
+
+            usableType
+                Null = 0,
+                Eatable = 1,
+                Breathable = 2,
+                Drinkable = 3
+
+            itemCategory
+                Null = 0,
+                Equipment = 1,
+                SeedPlant = 2,
+                SeedVegetable = 3,
+                FusionEnergy = 4,
+                SeedTree = 5
+            
+            groupCategory
+                Null = 0,
+                BaseBuilding = 1,
+                Machines = 2,
+                Screens = 3,
+                Furnitures = 4,
+                Misc = 5
+        */
+        "Zeolite" : {"craftableInList" : [5], "unlockingWorldUnit": 5, "recipeIngredients" : ["Bioplastic1", "Fertilizer2", "Mutagen1"]},
+        "FabricBlue" : {"craftableInList" : [2, 3], "unlockingWorldUnit": 5, "recipeIngredients" : ["Bioplastic1", "Bioplastic1", "Cobalt"]}
+    },
+    "ItemsToAdd" : {"AdvancedBackpack" : {
+            "associatedGameObject": "AdvancedBackpackPrefab",
+            "icon": "AdvancedBackpackIcon",
+            "recipeIngredients": [
+                "Backpack5",
+                "Alloy",
+                "Alloy",
+                "Alloy",
+                "Alloy",
+                "Alloy"
+            ],
+            "unlockingWorldUnit": 5,
+            "unlockingValue": 5000000.0,
+            "value": 28,
+            "craftableInList": [
+                3
+            ],
+            "equipableType": 2,
+            "itemCategory": 1
+        },
+        "Coconut": {
+            "associatedGameObject": "CoconutPrefab",
+            "icon": "CoconutIcon",
+            "unlockingWorldUnit": 5,
+            "value": 50,
+            "usableType": 1
+        }
+    },
+    "BuildingsToAdd" : {
+        "Vegetube2-Water2" : {
+            "associatedGameObject": "VegeTube2",
+            "icon": "Vegetube2",
+            "recipeIngredients": [
+                "Iron",
+                "WaterBottle1",
+                "WaterBottle1",
+                "Magnesium",
+                "Silicon"
+            ],
+            "unlockingWorldUnit": 3,
+            "unlockingValue": 500.0,
+            "inventorySize": 1,
+            "unitGenerationOxygen": 1.2000000476837159,
+            "unitGenerationEnergy": -1.25,
+            "groupCategory": 2
+        },
+        "PalmTree" : {
+            "associatedGameObject": "PalmTreePrefab",
+            "icon": "PalmTreeIcon",
+            "recipeIngredients" : ["Fertilizer1", "Algae1Seed"],
+            "unlockingWorldUnit" : 5,
+            "inventorySize" : 5,
+            "unitGenerationOxygen" : 100.0,
+            "groupCategory" : 5
+        }
+    }
+}
